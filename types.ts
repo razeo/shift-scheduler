@@ -1,10 +1,12 @@
+
 export enum Role {
   SERVER = 'Server',
   CHEF = 'Chef',
   BARTENDER = 'Bartender',
   HOST = 'Host',
   MANAGER = 'Manager',
-  DISHWASHER = 'Dishwasher'
+  DISHWASHER = 'Dishwasher',
+  HEAD_WAITER = 'Head Waiter'
 }
 
 export enum DayOfWeek {

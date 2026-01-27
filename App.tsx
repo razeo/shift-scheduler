@@ -7,7 +7,6 @@ import { INITIAL_EMPLOYEES, INITIAL_SHIFTS, INITIAL_DUTIES, DEFAULT_AI_RULES } f
 import { processScheduleRequest } from './services/gemini';
 import { Menu, X, Bot } from 'lucide-react';
 
-// STABILNI KLJUČEVI - ne mijenjati ih nikada kako bi se očuvali korisnički podaci
 const STORAGE_KEYS = {
   EMPLOYEES: 'shiftmaster_permanent_employees',
   DUTIES: 'shiftmaster_permanent_duties',
@@ -18,13 +17,17 @@ const STORAGE_KEYS = {
 
 const getMonday = (d: Date) => {
   const date = new Date(d);
+  date.setHours(0, 0, 0, 0);
   const day = date.getDay();
   const diff = date.getDate() - day + (day === 0 ? -6 : 1);
   return new Date(date.setDate(diff));
 };
 
 const formatDateToId = (date: Date) => {
-  return date.toISOString().split('T')[0];
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 const App: React.FC = () => {
@@ -57,9 +60,20 @@ const App: React.FC = () => {
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getMonday(new Date()));
   const currentWeekId = useMemo(() => formatDateToId(currentWeekStart), [currentWeekStart]);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  
+  // State for panels - default open on desktop, closed on mobile
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isChatOpen, setIsChatOpen] = useState(true);
+  
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Initial responsive check
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+      setIsChatOpen(false);
+    }
+  }, []);
 
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees)); }, [employees]);
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.DUTIES, JSON.stringify(duties)); }, [duties]);
@@ -88,10 +102,36 @@ const App: React.FC = () => {
   const updateShift = (updated: Shift) => setShifts(prev => prev.map(s => s.id === updated.id ? updated : s));
 
   const removeAssignment = (id: string) => setAssignments(prev => prev.filter(a => a.id !== id));
-  const updateAssignment = (id: string, duty: string) => setAssignments(prev => prev.map(a => a.id === id ? { ...a, specialDuty: duty } : a));
+  const updateAssignment = (id: string, duty: string) => setAssignments(prev => prev.map(a => id === a.id ? { ...a, specialDuty: duty } : a));
   const manualAssign = (shiftId: string, employeeId: string) => {
     if (assignments.some(a => a.shiftId === shiftId && a.employeeId === employeeId && a.weekId === currentWeekId)) return;
     setAssignments(prev => [...prev, { id: `asg-${Date.now()}`, shiftId, employeeId, weekId: currentWeekId }]);
+  };
+
+  const handleImportData = (data: any) => {
+    try {
+      if (data.employees) setEmployees(data.employees);
+      if (data.shifts) setShifts(data.shifts);
+      if (data.duties) setDuties(data.duties);
+      if (data.aiRules !== undefined) setAiRules(data.aiRules);
+      if (data.assignments) setAssignments(data.assignments);
+      alert("Podaci su uspješno učitani!");
+    } catch (e) {
+      alert("Greška pri učitavanju fajla.");
+    }
+  };
+
+  const resetToDefaults = () => {
+    if (window.confirm("Ovo će obrisati SVE vaše unose i vratiti praznu aplikaciju. Da li ste sigurni?")) {
+      localStorage.clear();
+      setEmployees(INITIAL_EMPLOYEES);
+      setShifts(INITIAL_SHIFTS);
+      setDuties(INITIAL_DUTIES);
+      setAiRules(DEFAULT_AI_RULES);
+      setAssignments([]);
+      setChatMessages([]);
+      window.location.reload();
+    }
   };
 
   const navigateWeek = (direction: number) => {
@@ -147,21 +187,87 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-100 overflow-hidden font-sans selection:bg-indigo-100">
-      <button className="lg:hidden absolute top-6 left-6 z-[60] p-3 bg-white text-slate-800 rounded-xl shadow-xl border border-slate-100" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
-      <div className={`fixed lg:static inset-y-0 left-0 z-50 transform transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-        <Sidebar employees={employees} duties={duties} aiRules={aiRules} onAddEmployee={addEmployee} onRemoveEmployee={removeEmployee} onUpdateEmployee={updateEmployee} onAddDuty={addDuty} onRemoveDuty={removeDuty} onUpdateDuty={updateDuty} onUpdateAiRules={setAiRules} />
+      
+      {/* Sidebar Wrapper */}
+      <div 
+        className={`fixed lg:static inset-y-0 left-0 z-50 transition-all duration-300 ease-in-out transform bg-white ${
+          isSidebarOpen 
+            ? 'translate-x-0 lg:w-80 border-r border-slate-200' 
+            : '-translate-x-full lg:w-0 lg:overflow-hidden lg:border-none'
+        }`}
+      >
+        <Sidebar 
+          employees={employees} 
+          duties={duties} 
+          shifts={shifts}
+          assignments={assignments}
+          aiRules={aiRules} 
+          onAddEmployee={addEmployee} 
+          onRemoveEmployee={removeEmployee} 
+          onUpdateEmployee={updateEmployee} 
+          onAddDuty={addDuty} 
+          onRemoveDuty={removeDuty} 
+          onUpdateDuty={updateDuty} 
+          onAddShift={addShift}
+          onRemoveShift={removeShift}
+          onUpdateShift={updateShift}
+          onUpdateAiRules={setAiRules} 
+          onResetAll={resetToDefaults}
+          onImportData={handleImportData}
+          onClose={() => setIsSidebarOpen(false)}
+        />
       </div>
+
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <ScheduleGrid shifts={shifts} assignments={weekAssignments} employees={employees} duties={duties} currentWeekStart={currentWeekStart} onRemoveAssignment={removeAssignment} onAddShift={addShift} onRemoveShift={removeShift} onUpdateShift={updateShift} onManualAssign={manualAssign} onUpdateAssignment={updateAssignment} onNavigateWeek={navigateWeek} />
-        <button className="lg:hidden fixed bottom-6 right-6 z-50 p-5 bg-indigo-600 text-white rounded-2xl shadow-2xl transition-transform active:scale-95" onClick={() => setIsChatOpen(!isChatOpen)}>
-          {isChatOpen ? <X size={24} /> : <Bot size={24} />}
-        </button>
+        <ScheduleGrid 
+          shifts={shifts} 
+          assignments={weekAssignments} 
+          employees={employees} 
+          duties={duties} 
+          currentWeekStart={currentWeekStart} 
+          onRemoveAssignment={removeAssignment} 
+          onManualAssign={manualAssign} 
+          onUpdateAssignment={updateAssignment} 
+          onNavigateWeek={navigateWeek} 
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          isChatOpen={isChatOpen}
+          onToggleChat={() => setIsChatOpen(!isChatOpen)}
+        />
+        
+        {/* Mobile FABs */}
+        {!isSidebarOpen && (
+           <button className="lg:hidden absolute top-6 left-6 z-[60] p-3 bg-white text-slate-800 rounded-xl shadow-xl border border-slate-100" onClick={() => setIsSidebarOpen(true)}>
+            <Menu size={20} />
+           </button>
+        )}
+        {!isChatOpen && (
+          <button className="lg:hidden fixed bottom-6 right-6 z-50 p-5 bg-indigo-600 text-white rounded-2xl shadow-2xl transition-transform active:scale-95" onClick={() => setIsChatOpen(true)}>
+            <Bot size={24} />
+          </button>
+        )}
       </div>
-      <div className={`fixed lg:static inset-y-0 right-0 z-50 transform transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isChatOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
-        <ChatInterface messages={chatMessages} onSendMessage={handleAiMessage} onCancelAi={() => abortControllerRef.current?.abort()} onApplyChanges={applyProposedChanges} onDiscardChanges={(mid) => setChatMessages(prev => prev.map(m => m.id === mid ? { ...m, status: 'discarded', text: "Prijedlog je odbačen." } : m))} isLoading={isAiLoading} />
+
+      {/* Chat Interface Wrapper */}
+      <div 
+        className={`fixed lg:static inset-y-0 right-0 z-50 transition-all duration-300 ease-in-out bg-white ${
+          isChatOpen 
+            ? 'translate-x-0 lg:w-96 border-l border-slate-200 shadow-xl lg:shadow-none' 
+            : 'translate-x-full lg:w-0 lg:overflow-hidden lg:border-none'
+        }`}
+      >
+        <ChatInterface 
+          messages={chatMessages} 
+          onSendMessage={handleAiMessage} 
+          onCancelAi={() => abortControllerRef.current?.abort()} 
+          onApplyChanges={applyProposedChanges} 
+          onDiscardChanges={(mid) => setChatMessages(prev => prev.map(m => m.id === mid ? { ...m, status: 'discarded', text: "Prijedlog je odbačen." } : m))} 
+          isLoading={isAiLoading} 
+          onClose={() => setIsChatOpen(false)}
+        />
       </div>
+
+      {/* Mobile Overlay */}
       {(isSidebarOpen || isChatOpen) && <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden" onClick={() => { setIsSidebarOpen(false); setIsChatOpen(false); }} />}
     </div>
   );

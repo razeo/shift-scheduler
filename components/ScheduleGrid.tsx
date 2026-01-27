@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { DayOfWeek, Shift, Assignment, Employee, Role, Duty } from '../types';
 import { DAYS_ORDER } from '../constants';
-import { Clock, Briefcase, Trash, PlusCircle, UserPlus, ChevronLeft, ChevronRight, CalendarDays, ChevronDown, ChevronUp, Users, Edit3, FileText, Settings, FileSpreadsheet } from 'lucide-react';
-import AddShiftModal from './AddShiftModal';
+import { Clock, Briefcase, Trash, UserPlus, ChevronLeft, ChevronRight, CalendarDays, ChevronDown, ChevronUp, Users, Edit3, FileText, FileSpreadsheet, UserMinus, Ban, PanelLeftOpen, PanelRightOpen } from 'lucide-react';
 import EditAssignmentModal from './EditAssignmentModal';
-import EditShiftModal from './EditShiftModal';
 import * as XLSX from 'xlsx';
 
 interface ScheduleGridProps {
@@ -14,12 +12,13 @@ interface ScheduleGridProps {
   duties: Duty[];
   currentWeekStart: Date;
   onRemoveAssignment: (assignmentId: string) => void;
-  onAddShift: (shift: Omit<Shift, 'id'>) => void;
-  onRemoveShift: (shiftId: string) => void;
-  onUpdateShift: (shift: Shift) => void;
   onManualAssign: (shiftId: string, employeeId: string) => void;
   onUpdateAssignment: (assignmentId: string, duty: string) => void;
   onNavigateWeek: (direction: number) => void;
+  isSidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
+  isChatOpen?: boolean;
+  onToggleChat?: () => void;
 }
 
 const ScheduleGrid: React.FC<ScheduleGridProps> = ({ 
@@ -29,15 +28,14 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
   duties,
   currentWeekStart,
   onRemoveAssignment,
-  onAddShift,
-  onRemoveShift,
-  onUpdateShift,
   onManualAssign,
   onUpdateAssignment,
-  onNavigateWeek
+  onNavigateWeek,
+  isSidebarOpen,
+  onToggleSidebar,
+  isChatOpen,
+  onToggleChat
 }) => {
-  const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);
-  const [editingShift, setEditingShift] = useState<Shift | null>(null);
   const [activeManualAssignShift, setActiveManualAssignShift] = useState<string | null>(null);
   const [expandedShifts, setExpandedShifts] = useState<Set<string>>(new Set());
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
@@ -72,23 +70,34 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
       });
   };
 
+  // Helper funkcija za pronalaženje slobodnih radnika za određeni dan
+  const getFreeEmployeesForDay = (day: DayOfWeek) => {
+    // 1. Nađi sve smjene za taj dan
+    const dayShifts = getShiftsForDay(day);
+    const dayShiftIds = dayShifts.map(s => s.id);
+
+    // 2. Nađi ID-eve radnika koji rade u tim smjenama
+    const busyEmployeeIds = new Set(
+      assignments
+        .filter(a => dayShiftIds.includes(a.shiftId))
+        .map(a => a.employeeId)
+    );
+
+    // 3. Vrati radnike koji nisu zauzeti
+    return employees.filter(e => !busyEmployeeIds.has(e.id));
+  };
+
   const handleExportExcel = () => {
-    // Header Row 1: Day Names
     const header1 = ["", "Ime i prezime", ...DAYS_ORDER];
-    
-    // Header Row 2: Dates
     const header2 = ["", "", ...DAYS_ORDER.map((_, i) => getDateForDay(i))];
 
     const rows = employees.map((emp, idx) => {
       const rowData = [(idx + 1).toString(), emp.name];
-      
       DAYS_ORDER.forEach((day) => {
-        // Find all assignments for this employee on this day
         const dayShifts = shifts.filter(s => s.day === day);
         const empAssignment = assignments.find(a => 
           dayShifts.some(s => s.id === a.shiftId) && a.employeeId === emp.id
         );
-
         if (empAssignment) {
           const shift = shifts.find(s => s.id === empAssignment.shiftId);
           rowData.push(shift ? `${shift.startTime}-${shift.endTime}` : "OFF");
@@ -96,7 +105,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
           rowData.push("OFF");
         }
       });
-      
       return rowData;
     });
 
@@ -104,8 +112,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     const ws = XLSX.utils.aoa_to_sheet(worksheetData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Raspored");
-
-    // Preuzimanje fajla
     const fileName = `Raspored_${currentWeekStart.toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, fileName);
   };
@@ -125,8 +131,11 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
       case Role.CHEF: return 'bg-orange-100 text-orange-700 border-orange-200';
       case Role.MANAGER: return 'bg-purple-100 text-purple-700 border-purple-200';
       case Role.SERVER: return 'bg-blue-100 text-blue-700 border-blue-200';
+      case Role.HEAD_WAITER: return 'bg-cyan-100 text-cyan-700 border-cyan-200';
       case Role.BARTENDER: return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      default: return 'bg-slate-100 text-slate-600 border-slate-200';
+      case Role.HOST: return 'bg-amber-100 text-amber-700 border-amber-200';
+      case Role.DISHWASHER: return 'bg-slate-100 text-slate-700 border-slate-200';
+      default: return 'bg-slate-50 text-slate-600 border-slate-200';
     }
   };
 
@@ -136,6 +145,15 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
+              {!isSidebarOpen && onToggleSidebar && (
+                <button 
+                  onClick={onToggleSidebar}
+                  className="p-2 bg-white text-slate-600 rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors hidden lg:block"
+                  title="Prikaži meni"
+                >
+                  <PanelLeftOpen size={20} />
+                </button>
+              )}
               <div className="bg-indigo-100 text-indigo-700 p-2.5 rounded-xl shadow-inner">
                 <CalendarDays size={26} />
               </div>
@@ -161,7 +179,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <button 
               onClick={handleExportExcel}
               className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3.5 rounded-xl font-black flex items-center gap-2 transition-all shadow-lg shadow-emerald-100 active:scale-95 whitespace-nowrap"
@@ -169,13 +187,15 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
               <FileSpreadsheet size={22} />
               Izvezi u Excel
             </button>
-            <button 
-              onClick={() => setIsAddShiftOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl font-black flex items-center gap-2 transition-all shadow-lg shadow-indigo-100 active:scale-95 whitespace-nowrap"
-            >
-              <PlusCircle size={22} />
-              Nova smjena
-            </button>
+            {!isChatOpen && onToggleChat && (
+              <button 
+                onClick={onToggleChat}
+                className="bg-white hover:bg-indigo-50 text-indigo-600 px-4 py-3.5 rounded-xl font-black flex items-center gap-2 transition-all border border-indigo-100 shadow-sm hidden lg:flex"
+              >
+                <PanelRightOpen size={22} />
+                AI Chat
+              </button>
+            )}
           </div>
         </header>
 
@@ -183,6 +203,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
           {DAYS_ORDER.map((day, idx) => {
             const daysShifts = getShiftsForDay(day);
             const dayDate = getDateForDay(idx);
+            const freeEmployees = getFreeEmployeesForDay(day);
             
             return (
               <div key={day} className="flex flex-col gap-3">
@@ -210,21 +231,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                           isExpanded ? 'border-indigo-300 shadow-xl ring-2 ring-indigo-50 z-10' : 'border-slate-200 shadow-sm hover:border-indigo-200 hover:shadow-md'
                         }`}
                       >
-                        <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); setEditingShift(shift); }}
-                            className="p-1.5 bg-white text-indigo-600 rounded-full border border-indigo-100 shadow-lg hover:bg-indigo-50"
-                          >
-                            <Settings size={12} />
-                          </button>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); onRemoveShift(shift.id); }}
-                            className="p-1.5 bg-white text-red-600 rounded-full border border-red-100 shadow-lg hover:bg-red-50"
-                          >
-                            <Trash size={12} />
-                          </button>
-                        </div>
-
                         <div 
                           className="p-4 cursor-pointer select-none"
                           onClick={() => toggleShiftExpansion(shift.id)}
@@ -277,11 +283,14 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                               {shiftAssignments.map((assigned) => (
                                 <div 
                                   key={assigned.id} 
-                                  onClick={() => setEditingAssignment(assigned)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingAssignment(assigned);
+                                  }}
                                   className="group/item flex items-center justify-between bg-white p-3 rounded-2xl border border-slate-100 transition-all hover:border-indigo-200 hover:bg-indigo-50/20 shadow-sm cursor-pointer"
                                 >
                                   <div className="flex items-center gap-3 overflow-hidden">
-                                    <div className={`shrink-0 w-9 h-9 rounded-full shadow-sm flex items-center justify-center text-xs font-black border ${getRoleColor(assigned.employee?.role)}`}>
+                                    <div className={`shrink-0 w-9 h-9 rounded-full shadow-sm flex items-center justify-center text-xs font-black border transition-colors ${getRoleColor(assigned.employee?.role)}`}>
                                       {assigned.employee?.name.charAt(0)}
                                     </div>
                                     <div className="min-w-0">
@@ -292,7 +301,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                         </span>
                                       </div>
                                       {assigned.specialDuty ? (
-                                        <div className="flex items-center gap-1.5 text-[10px] text-amber-600 font-black bg-amber-50 px-2 py-0.5 rounded-lg w-fit mt-1 border border-amber-100">
+                                        <div className="flex items-center gap-1.5 text-[10px] text-amber-600 font-black bg-amber-50 px-2 py-0.5 rounded-lg w-fit mt-1 border border-amber-100 animate-in fade-in slide-in-from-left-1">
                                           <Briefcase size={10} />
                                           <span className="truncate max-w-[130px]">{assigned.specialDuty}</span>
                                         </div>
@@ -303,12 +312,14 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                       )}
                                     </div>
                                   </div>
+
                                   <button 
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       onRemoveAssignment(assigned.id);
                                     }}
                                     className="text-slate-300 hover:text-red-500 transition-all p-2 hover:bg-red-50 rounded-xl"
+                                    title="Ukloni radnika"
                                   >
                                     <Trash size={14} />
                                   </button>
@@ -371,27 +382,43 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Prazan dan</p>
                     </div>
                   )}
+
+                  {/* SEKCIJA SLOBODNI RADNICI */}
+                  {freeEmployees.length > 0 && (
+                    <div className="pt-2">
+                       <div className="flex items-center gap-2 mb-2 px-2">
+                          <UserMinus size={12} className="text-slate-400" />
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Slobodni ({freeEmployees.length})</h4>
+                       </div>
+                       <div className="bg-slate-100/50 rounded-2xl p-2 space-y-1.5 border border-slate-100">
+                          {freeEmployees.map(emp => {
+                            const isAvailable = emp.availability ? emp.availability.includes(day) : true;
+                            
+                            return (
+                              <div key={emp.id} className={`flex items-center gap-2 p-2 rounded-xl border bg-white ${isAvailable ? 'border-slate-100 opacity-90' : 'border-slate-100 bg-slate-50 opacity-50'}`}>
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black border ${getRoleColor(emp.role)}`}>
+                                  {emp.name.charAt(0)}
+                                </div>
+                                <span className={`text-[11px] font-bold ${isAvailable ? 'text-slate-600' : 'text-slate-400 line-through decoration-slate-300'}`}>
+                                  {emp.name}
+                                </span>
+                                {!isAvailable && (
+                                  <div className="ml-auto" title="Nije dostupan">
+                                    <Ban size={12} className="text-slate-300" />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                       </div>
+                    </div>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       </div>
-
-      {isAddShiftOpen && (
-        <AddShiftModal 
-          onClose={() => setIsAddShiftOpen(false)}
-          onAdd={onAddShift}
-        />
-      )}
-
-      {editingShift && (
-        <EditShiftModal
-          shift={editingShift}
-          onClose={() => setEditingShift(null)}
-          onUpdate={onUpdateShift}
-        />
-      )}
 
       {editingAssignment && (
         <EditAssignmentModal

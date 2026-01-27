@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, Sparkles, Loader2, Square, Check, X } from 'lucide-react';
+import { Send, Bot, Sparkles, Loader2, Square, Check, X, PanelRightClose } from 'lucide-react';
 import { ChatMessage } from '../types';
 
 interface ChatInterfaceProps {
@@ -9,6 +9,7 @@ interface ChatInterfaceProps {
   onApplyChanges: (messageId: string) => void;
   onDiscardChanges: (messageId: string) => void;
   isLoading: boolean;
+  onClose?: () => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
@@ -17,7 +18,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onCancelAi,
   onApplyChanges,
   onDiscardChanges,
-  isLoading 
+  isLoading,
+  onClose
 }) => {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -37,13 +39,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="w-96 bg-white border-l border-slate-200 h-screen flex flex-col shadow-xl z-10">
-      <div className="p-4 border-b border-slate-100 bg-slate-50/50 backdrop-blur-sm">
-        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-          <Bot className="w-5 h-5 text-indigo-600" />
-          AI Asistent
-        </h2>
-        <p className="text-xs text-slate-500">Pitajte me da generišem raspored ili dodam radnike.</p>
+    <div className="w-full h-full flex flex-col">
+      <div className="p-4 border-b border-slate-100 bg-slate-50/50 backdrop-blur-sm flex justify-between items-center">
+        <div>
+          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <Bot className="w-5 h-5 text-indigo-600" />
+            AI Asistent
+          </h2>
+          <p className="text-xs text-slate-500">Pitajte me da generišem raspored ili dodam radnike.</p>
+        </div>
+        {onClose && (
+          <button onClick={onClose} className="p-1.5 hover:bg-slate-200/50 rounded-lg text-slate-400 hover:text-slate-600 transition-colors" title="Sakrij chat">
+            <PanelRightClose size={18} />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
