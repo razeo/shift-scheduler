@@ -76,10 +76,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[90%] p-3 rounded-xl text-sm leading-relaxed relative ${
+              className={`max-w-[90%] p-3 rounded-2xl text-sm leading-relaxed relative shadow-sm ${
                 msg.role === 'user'
-                  ? 'bg-indigo-600 text-white rounded-br-none shadow-md'
-                  : `bg-slate-100 text-slate-800 rounded-bl-none border ${
+                  ? 'bg-indigo-600 text-white rounded-br-sm'
+                  : `bg-white text-slate-800 rounded-bl-sm border ${
                       msg.status === 'pending' ? 'border-indigo-300 ring-2 ring-indigo-50' : 'border-slate-200'
                     }`
               }`}
@@ -90,15 +90,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <div className="mt-4 pt-3 border-t border-indigo-100 flex gap-2">
                   <button 
                     onClick={() => onApplyChanges(msg.id)}
-                    className="flex-1 bg-indigo-600 text-white text-[10px] font-black uppercase py-2 rounded-lg flex items-center justify-center gap-1 hover:bg-indigo-700 transition shadow-sm"
+                    className="flex-1 bg-indigo-600 text-white text-[10px] font-black uppercase py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-indigo-700 transition shadow-lg shadow-indigo-100 active:scale-[0.98]"
                   >
-                    <Check size={12} /> Primijeni
+                    <Check size={14} /> Primijeni
                   </button>
                   <button 
                     onClick={() => onDiscardChanges(msg.id)}
-                    className="flex-1 bg-white text-slate-500 text-[10px] font-black uppercase py-2 rounded-lg border border-slate-200 flex items-center justify-center gap-1 hover:bg-slate-50 transition"
+                    className="flex-1 bg-white text-slate-500 text-[10px] font-black uppercase py-2.5 rounded-xl border border-slate-200 flex items-center justify-center gap-1.5 hover:bg-slate-50 transition active:scale-[0.98]"
                   >
-                    <X size={12} /> Odbaci
+                    <X size={14} /> Odbaci
                   </button>
                 </div>
               )}
@@ -129,22 +129,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t border-slate-100 bg-white">
+      <form onSubmit={handleSubmit} className="p-4 border-t border-slate-100 bg-slate-50/50">
         <div className="relative">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Napišite zahtjev..."
-            className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-sm"
+            className="w-full pl-4 pr-12 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-sm hover:shadow-md"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="absolute right-2 top-2 p-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="absolute right-2 top-2 p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg active:scale-95"
           >
-            <Send size={16} />
+            <Send size={18} />
           </button>
         </div>
       </form>

@@ -144,35 +144,38 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
       <div className="max-w-7xl mx-auto">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-3">
               {!isSidebarOpen && onToggleSidebar && (
                 <button 
                   onClick={onToggleSidebar}
-                  className="p-2 bg-white text-slate-600 rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors hidden lg:block"
+                  className="p-2.5 bg-white text-slate-600 rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 hover:shadow-md transition-all active:scale-95 hidden lg:block"
                   title="Prikaži meni"
                 >
                   <PanelLeftOpen size={20} />
                 </button>
               )}
-              <div className="bg-indigo-100 text-indigo-700 p-2.5 rounded-xl shadow-inner">
-                <CalendarDays size={26} />
+              <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-3 rounded-xl shadow-lg shadow-indigo-200">
+                <CalendarDays size={28} />
               </div>
-              <h2 className="text-4xl font-black text-slate-900 tracking-tight">Planer Smjena</h2>
+              <div>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">Planer Smjena</h2>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">ShiftMaster AI</p>
+              </div>
             </div>
             
-            <div className="flex items-center gap-4 bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-fit mt-2">
+            <div className="flex items-center gap-3 bg-white p-1.5 pr-4 rounded-2xl border border-slate-200 shadow-sm w-fit hover:shadow-md transition-shadow">
               <button 
                 onClick={() => onNavigateWeek(-1)}
-                className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-600 active:scale-90"
+                className="p-2.5 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all active:scale-90"
               >
                 <ChevronLeft size={20} />
               </button>
-              <div className="text-sm font-black text-slate-700 min-w-[170px] text-center tracking-tight">
+              <div className="text-sm font-bold text-slate-700 min-w-[160px] text-center tracking-tight">
                 {getWeekRangeLabel()}
               </div>
               <button 
                 onClick={() => onNavigateWeek(1)}
-                className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-600 active:scale-90"
+                className="p-2.5 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all active:scale-90"
               >
                 <ChevronRight size={20} />
               </button>
@@ -227,8 +230,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     return (
                       <div 
                         key={shift.id} 
-                        className={`group relative bg-white rounded-2xl border transition-all duration-300 ${
-                          isExpanded ? 'border-indigo-300 shadow-xl ring-2 ring-indigo-50 z-10' : 'border-slate-200 shadow-sm hover:border-indigo-200 hover:shadow-md'
+                        className={`group relative bg-white rounded-2xl border transition-all duration-300 hover-lift ${
+                          isExpanded ? 'border-indigo-300 shadow-xl ring-2 ring-indigo-50 z-10' : 'border-slate-200 shadow-sm hover:border-indigo-200 hover:shadow-lg'
                         }`}
                       >
                         <div 
@@ -377,9 +380,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                   })}
 
                   {daysShifts.length === 0 && (
-                    <div className="h-28 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 rounded-3xl bg-white/40 text-slate-400">
-                      <Clock size={24} className="opacity-10" />
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Prazan dan</p>
+                    <div className="h-28 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 rounded-3xl bg-white/40 text-slate-400 hover:bg-white/60 hover:border-indigo-200 hover:text-indigo-400 transition-all cursor-pointer group">
+                      <Clock size={24} className="opacity-10 group-hover:opacity-30 transition-opacity" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-300 group-hover:text-indigo-400 transition-colors">Prazan dan</p>
                     </div>
                   )}
 

@@ -285,7 +285,13 @@ const Sidebar: React.FC<SidebarProps> = ({
           )}
 
           <div className="space-y-1.5">
-            {sortedEmployees.map((emp) => (
+            {sortedEmployees.length === 0 ? (
+              <div className="text-center py-8 px-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                <Users size={32} className="mx-auto text-slate-300 mb-2" />
+                <p className="text-xs text-slate-500 font-medium">Nema radnika</p>
+                <p className="text-[10px] text-slate-400 mt-1">Klikni + da dodaš prvog radnika</p>
+              </div>
+            ) : sortedEmployees.map((emp) => (
               <div key={emp.id} className="group flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all">
                 <div className="flex items-center gap-3 overflow-hidden">
                   <div className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-xs font-black ${
@@ -329,7 +335,13 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           <div className="space-y-2">
-            {sortedShifts.map((shift) => (
+            {sortedShifts.length === 0 ? (
+              <div className="text-center py-6 px-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                <Clock size={28} className="mx-auto text-slate-300 mb-2" />
+                <p className="text-xs text-slate-500 font-medium">Nema smjena</p>
+                <p className="text-[10px] text-slate-400 mt-1">Klikni + da dodaš prvu smjenu</p>
+              </div>
+            ) : sortedShifts.map((shift) => (
               <div key={shift.id} className="group flex items-center justify-between p-2.5 px-3 rounded-xl hover:bg-slate-50 border border-slate-100 bg-white shadow-sm transition-all">
                 <div className="overflow-hidden">
                   <div className="flex items-center gap-1.5 mb-0.5">
@@ -386,7 +398,13 @@ const Sidebar: React.FC<SidebarProps> = ({
           )}
 
           <div className="space-y-1">
-            {duties.map((duty) => (
+            {duties.length === 0 ? (
+              <div className="text-center py-6 px-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                <Briefcase size={28} className="mx-auto text-slate-300 mb-2" />
+                <p className="text-xs text-slate-500 font-medium">Nema dužnosti</p>
+                <p className="text-[10px] text-slate-400 mt-1">Klikni + da dodaš prvu dužnost</p>
+              </div>
+            ) : duties.map((duty) => (
               <div key={duty.id} className="group flex items-center justify-between p-2 px-3 rounded-lg hover:bg-slate-50 transition-colors">
                 <span className="text-xs font-semibold text-slate-700">{duty.label}</span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
