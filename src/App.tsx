@@ -66,11 +66,57 @@ const DEFAULT_AI_RULES = `• Svaki radnik ima max 5 smjena sedmično
 
 function App() {
   // State management with localStorage persistence
-  const [employees, setEmployees] = useLocalStorage<Employee[]>(STORAGE_KEYS.EMPLOYEES, INITIAL_EMPLOYEES);
-  const [duties, setDuties] = useLocalStorage<Duty[]>(STORAGE_KEYS.DUTIES, INITIAL_DUTIES);
-  const [shifts, setShifts] = useLocalStorage<Shift[]>(STORAGE_KEYS.SHIFTS, INITIAL_SHIFTS);
-  const [assignments, setAssignments] = useLocalStorage<Assignment[]>(STORAGE_KEYS.ASSIGNMENTS, []);
-  const [aiRules, setAiRules] = useLocalStorage<string>(STORAGE_KEYS.AI_RULES, DEFAULT_AI_RULES);
+  const [employees, setEmployees] = useState<Employee[]>(() => {
+    try {
+      const item = localStorage.getItem(STORAGE_KEYS.EMPLOYEES);
+      if (item) {
+        const parsed = JSON.parse(item);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_EMPLOYEES;
+  });
+  
+  const [duties, setDuties] = useState<Duty[]>(() => {
+    try {
+      const item = localStorage.getItem(STORAGE_KEYS.DUTIES);
+      if (item) {
+        const parsed = JSON.parse(item);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_DUTIES;
+  });
+  
+  const [shifts, setShifts] = useState<Shift[]>(() => {
+    try {
+      const item = localStorage.getItem(STORAGE_KEYS.SHIFTS);
+      if (item) {
+        const parsed = JSON.parse(item);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_SHIFTS;
+  });
+  
+  const [assignments, setAssignmentsState] = useState<Assignment[]>(() => {
+    try {
+      const item = localStorage.getItem(STORAGE_KEYS.ASSIGNMENTS);
+      if (item) {
+        const parsed = JSON.parse(item);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+  
+  const [aiRules, setAiRules] = useState<string>(() => {
+    try {
+      const item = localStorage.getItem(STORAGE_KEYS.AI_RULES);
+      if (item) return item;
+    } catch {}
+    return DEFAULT_AI_RULES;
+  });
 
   // UI State
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -81,56 +127,86 @@ function App() {
 
   // Computed values
   const currentWeekId = useMemo(() => formatDateToId(currentWeekStart), [currentWeekStart]);
-  const weekAssignments = useMemo(() => 
-    assignments.filter((a: Assignment) => a.weekId === currentWeekId), 
-    [assignments, currentWeekId]
-  );
+  
+  const weekAssignments = useMemo(() => {
+    const filtered = assignments.filter(a => a.weekId === currentWeekId);
+    console.log('[DEBUG] weekAssignments:', {
+      total: assignments.length,
+      weekId: currentWeekId,
+      filtered: filtered.length
+    });
+    return filtered;
+  }, [assignments, currentWeekId]);
 
   // CRUD Operations - Employees
   const addEmployee = (newEmp: Omit<Employee, 'id'>) => {
-    setEmployees((prev: Employee[]) => [...prev, { ...newEmp, id: generateEmployeeId() }]);
+    const updated = [...employees, { ...newEmp, id: generateEmployeeId() }];
+    setEmployees(updated);
+    localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(updated));
     toast.success(`Dodat radnik: ${newEmp.name}`);
   };
   
   const removeEmployee = (id: string) => {
-    const employee = employees.find((e: Employee) => e.id === id);
-    setEmployees((prev: Employee[]) => prev.filter((e: Employee) => e.id !== id));
-    setAssignments((prev: Assignment[]) => prev.filter((a: Assignment) => a.employeeId !== id));
+    const employee = employees.find(e => e.id === id);
+    const updated = employees.filter(e => e.id !== id);
+    setEmployees(updated);
+    localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(updated));
+    
+    const filteredAssignments = assignments.filter(a => a.employeeId !== id);
+    setAssignmentsState(filteredAssignments);
+    localStorage.setItem(STORAGE_KEYS.ASSIGNMENTS, JSON.stringify(filteredAssignments));
+    
     if (employee) toast.success(`Uklonjen radnik: ${employee.name}`);
   };
 
   // CRUD Operations - Duties
   const addDuty = (newDuty: Omit<Duty, 'id'>) => {
-    setDuties((prev: Duty[]) => [...prev, { ...newDuty, id: generateDutyId() }]);
+    const updated = [...duties, { ...newDuty, id: generateDutyId() }];
+    setDuties(updated);
+    localStorage.setItem(STORAGE_KEYS.DUTIES, JSON.stringify(updated));
     toast.success(`Dodata dužnost: ${newDuty.label}`);
   };
   
   const removeDuty = (id: string) => {
-    const duty = duties.find((d: Duty) => d.id === id);
-    setDuties((prev: Duty[]) => prev.filter((d: Duty) => d.id !== id));
+    const duty = duties.find(d => d.id === id);
+    const updated = duties.filter(d => d.id !== id);
+    setDuties(updated);
+    localStorage.setItem(STORAGE_KEYS.DUTIES, JSON.stringify(updated));
     if (duty) toast.success(`Uklonjena dužnost: ${duty.label}`);
   };
 
   // CRUD Operations - Shifts
   const addShift = (newShift: Omit<Shift, 'id'>) => {
-    setShifts((prev: Shift[]) => [...prev, { ...newShift, id: generateShiftId() }]);
+    const updated = [...shifts, { ...newShift, id: generateShiftId() }];
+    setShifts(updated);
+    localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(updated));
     toast.success(`Dodata smjena: ${newShift.label}`);
   };
   
   const removeShift = (id: string) => {
-    const shift = shifts.find((s: Shift) => s.id === id);
-    setShifts((prev: Shift[]) => prev.filter((s: Shift) => s.id !== id));
-    setAssignments((prev: Assignment[]) => prev.filter((a: Assignment) => a.shiftId !== id));
+    const shift = shifts.find(s => s.id === id);
+    const updated = shifts.filter(s => s.id !== id);
+    setShifts(updated);
+    localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(updated));
+    
+    const filteredAssignments = assignments.filter(a => a.shiftId !== id);
+    setAssignmentsState(filteredAssignments);
+    localStorage.setItem(STORAGE_KEYS.ASSIGNMENTS, JSON.stringify(filteredAssignments));
+    
     if (shift) toast.success(`Uklonjena smjena: ${shift.label}`);
   };
 
   // Assignment Operations
   const removeAssignment = (id: string) => {
-    setAssignments((prev: Assignment[]) => prev.filter((a: Assignment) => a.id !== id));
+    const filtered = assignments.filter(a => a.id !== id);
+    setAssignmentsState(filtered);
+    localStorage.setItem(STORAGE_KEYS.ASSIGNMENTS, JSON.stringify(filtered));
   };
 
   const manualAssign = (shiftId: string, employeeId: string) => {
-    if (assignments.some((a: Assignment) => 
+    console.log('[DEBUG] manualAssign:', { shiftId, employeeId, currentWeekId });
+    
+    if (assignments.some(a => 
       a.shiftId === shiftId && 
       a.employeeId === employeeId && 
       a.weekId === currentWeekId
@@ -139,14 +215,18 @@ function App() {
       return;
     }
     
-    setAssignments((prev: Assignment[]) => [...prev, { 
+    const newAssignment: Assignment = { 
       id: generateAssignmentId(), 
       shiftId, 
       employeeId, 
       weekId: currentWeekId 
-    }]);
+    };
     
-    const employee = employees.find((e: Employee) => e.id === employeeId);
+    const updated = [...assignments, newAssignment];
+    setAssignmentsState(updated);
+    localStorage.setItem(STORAGE_KEYS.ASSIGNMENTS, JSON.stringify(updated));
+    
+    const employee = employees.find(e => e.id === employeeId);
     toast.success(`Dodijeljen: ${employee?.name || '?'}`);
   };
 
@@ -201,11 +281,26 @@ function App() {
   // Import/Export
   const handleImportData = (data: any) => {
     try {
-      if (data.employees) setEmployees(data.employees);
-      if (data.shifts) setShifts(data.shifts);
-      if (data.duties) setDuties(data.duties);
-      if (data.aiRules !== undefined) setAiRules(data.aiRules);
-      if (data.assignments) setAssignments(data.assignments);
+      if (data.employees) {
+        setEmployees(data.employees);
+        localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(data.employees));
+      }
+      if (data.shifts) {
+        setShifts(data.shifts);
+        localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(data.shifts));
+      }
+      if (data.duties) {
+        setDuties(data.duties);
+        localStorage.setItem(STORAGE_KEYS.DUTIES, JSON.stringify(data.duties));
+      }
+      if (data.aiRules !== undefined) {
+        setAiRules(data.aiRules);
+        localStorage.setItem(STORAGE_KEYS.AI_RULES, data.aiRules);
+      }
+      if (data.assignments) {
+        setAssignmentsState(data.assignments);
+        localStorage.setItem(STORAGE_KEYS.ASSIGNMENTS, JSON.stringify(data.assignments));
+      }
       toast.success('Podaci uvezeni!');
     } catch (e) {
       toast.error('Greška pri uvozu podataka');
@@ -219,7 +314,7 @@ function App() {
       setShifts(INITIAL_SHIFTS);
       setDuties(INITIAL_DUTIES);
       setAiRules(DEFAULT_AI_RULES);
-      setAssignments([]);
+      setAssignmentsState([]);
       setChatMessages([]);
       toast.success('Svi podaci su resetovani');
     }
@@ -248,7 +343,10 @@ function App() {
           onRemoveDuty={removeDuty} 
           onAddShift={addShift}
           onRemoveShift={removeShift}
-          onUpdateAiRules={setAiRules} 
+          onUpdateAiRules={(rules: string) => {
+            setAiRules(rules);
+            localStorage.setItem(STORAGE_KEYS.AI_RULES, rules);
+          }} 
           onResetAll={handleResetAll}
           onImportData={handleImportData}
           onClose={() => setIsSidebarOpen(false)}
