@@ -297,14 +297,6 @@ function App() {
             <Menu size={20} />
            </button>
         )}
-        {!isChatOpen && (
-          <button 
-            className="lg:hidden fixed bottom-6 right-6 z-50 p-5 bg-primary-600 text-white rounded-2xl shadow-2xl transition-transform active:scale-95"
-            onClick={() => setIsChatOpen(true)}
-          >
-            <Bot size={24} />
-          </button>
-        )}
       </div>
 
       {/* Chat Interface */}

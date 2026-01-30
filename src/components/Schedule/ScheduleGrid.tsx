@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Users, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bot, Calendar } from 'lucide-react';
 import { Employee, Shift, Assignment, Duty, DayOfWeek } from '../../types';
 import { formatDateToId, getDayName, dayOfWeekToDate } from '../../utils/date';
 
@@ -86,9 +86,10 @@ export function ScheduleGrid({
           <div className="flex items-center gap-2">
             <button
               onClick={onToggleChat}
-              className="p-2 hover:bg-slate-100 rounded-lg lg:hidden"
+              className={`p-2 hover:bg-slate-100 rounded-lg transition-colors ${!isChatOpen ? 'bg-primary-100 text-primary-600' : 'text-slate-600'}`}
+              title={isChatOpen ? "Zatvori chat" : "Otvori chat"}
             >
-              <Users size={20} />
+              <Bot size={20} />
             </button>
           </div>
         </div>
