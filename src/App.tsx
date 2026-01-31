@@ -1,11 +1,11 @@
 // ===========================================
 // Main App Component
-// Shift Scheduler - Restaurant Shift Management
+// Shift Scheduler - Restaurant Management System
 // ===========================================
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { Menu } from 'lucide-react';
+import { Menu, Settings } from 'lucide-react';
 import { STORAGE_KEYS, runMigrations, getStorageItem, setStorageItem, clearAllStorage } from './utils/storage';
 import { generateEmployeeId, generateDutyId, generateShiftId, generateAssignmentId } from './utils/id';
 import { getMonday, formatDateToId, addWeeks } from './utils/date';
@@ -22,7 +22,10 @@ import {
 import { Sidebar } from './components/Sidebar';
 import { ScheduleGrid } from './components/Schedule';
 import { ChatInterface } from './components/Chat';
-import { processScheduleRequest, isAiConfigured, getAiStatus } from './services/ai';
+import { ShiftHandover } from './components/ShiftHandover';
+import { processScheduleRequest, isAiConfigured } from './services/ai';
+
+type PageType = 'schedule' | 'handover' | 'settings';
 
 const INITIAL_EMPLOYEES: Employee[] = [
   { id: 'emp-1', name: 'Marko Marković', role: Role.SERVER },
@@ -64,6 +67,9 @@ function App() {
     runMigrations();
   }, []);
 
+  // Page state
+  const [currentPage, setCurrentPage] = useState<PageType>('schedule');
+
   // State management with localStorage persistence
   const [employees, setEmployees] = useState<Employee[]>(() => 
     getStorageItem(STORAGE_KEYS.EMPLOYEES, INITIAL_EMPLOYEES)
@@ -89,12 +95,9 @@ function App() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getMonday(new Date()));
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isChatOpen, setIsChatOpen] = useState(true);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  
-  // Abort controller for AI requests
-  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Computed values
   const currentWeekId = useMemo(() => formatDateToId(currentWeekStart), [currentWeekStart]);
@@ -177,7 +180,6 @@ function App() {
   };
 
   const manualAssign = (shiftId: string, employeeId: string) => {
-    // Check for exact duplicate (same shift, employee, week)
     const isDuplicate = assignments.some(a => 
       a.shiftId === shiftId && 
       a.employeeId === employeeId && 
@@ -208,12 +210,10 @@ function App() {
   const navigateWeek = (direction: number) => 
     setCurrentWeekStart(addWeeks(currentWeekStart, direction));
 
-  // AI Chat - Full Implementation
+  // AI Chat
   const handleAiMessage = async (text: string) => {
-    // Check if AI is configured
     if (!isAiConfigured()) {
-      const status = getAiStatus();
-      toast.error(status.message);
+      toast.error('API ključ nije podešen. Dodajte VITE_GROQ_API_KEY u .env.local');
       return;
     }
 
@@ -227,9 +227,6 @@ function App() {
     setIsAiLoading(true);
     setAiError(null);
 
-    // Create abort controller for cancellation
-    abortControllerRef.current = new AbortController();
-
     try {
       const state: ScheduleState = {
         employees,
@@ -240,8 +237,7 @@ function App() {
         aiRules,
       };
 
-      const response = await processScheduleRequest(text, state, abortControllerRef.current.signal);
-
+      const response = await processScheduleRequest(text, state);
       const modelMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'model',
@@ -251,28 +247,12 @@ function App() {
         pendingAssignments: response.assignments,
         pendingEmployees: response.newEmployees,
       };
-
       setChatMessages(prev => [...prev, modelMsg]);
-      toast.success('AI je generisao prijedlog rasporeda');
+      toast.success('AI je generisao prijedlog');
     } catch (error: any) {
-      if (error.name === 'AbortError') {
-        toast.success('AI prekinut');
-      } else {
-        const errorMsg = error.message || 'Došlo je do greške';
-        setAiError(errorMsg);
-        
-        const errorResponseMsg: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'model',
-          text: `Greška: ${errorMsg}`,
-          timestamp: Date.now(),
-          status: 'discarded',
-        };
-        setChatMessages(prev => [...prev, errorResponseMsg]);
-      }
+      setAiError(error.message || 'Greška');
     } finally {
       setIsAiLoading(false);
-      abortControllerRef.current = null;
     }
   };
 
@@ -280,7 +260,6 @@ function App() {
     const message = chatMessages.find(m => m.id === messageId);
     if (!message?.pendingAssignments) return;
 
-    // Add new assignments
     const newAssignments: Assignment[] = message.pendingAssignments.map(a => ({
       ...a,
       id: generateAssignmentId(),
@@ -291,35 +270,17 @@ function App() {
     setAssignments(updated);
     setStorageItem(STORAGE_KEYS.ASSIGNMENTS, updated);
 
-    // Add new employees if any
-    if (message.pendingEmployees) {
-      const newEmployees = message.pendingEmployees.map(emp => ({
-        ...emp,
-        id: generateEmployeeId(),
-      })) as Employee[];
-
-      const updatedEmployees = [...employees, ...newEmployees];
-      setEmployees(updatedEmployees);
-      setStorageItem(STORAGE_KEYS.EMPLOYEES, updatedEmployees);
-    }
-
     setChatMessages(prev => prev.map(m => 
-      m.id === messageId ? { ...m, status: 'applied' as const } : m
+      m.id === messageId ? { ...m, status: 'applied' } : m
     ));
     toast.success('Izmjene primijenjene');
   };
 
   const handleDiscardChanges = (messageId: string) => {
     setChatMessages(prev => prev.map(m => 
-      m.id === messageId ? { ...m, status: 'discarded' as const } : m
+      m.id === messageId ? { ...m, status: 'discarded' } : m
     ));
     toast.success('Izmjene odbacene');
-  };
-
-  const handleCancelAi = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
   };
 
   // Import/Export
@@ -364,13 +325,11 @@ function App() {
     }
   };
 
-  // Check AI status on mount
-  useEffect(() => {
-    const status = getAiStatus();
-    if (!status.configured) {
-      console.warn('[AI]', status.message);
-    }
-  }, []);
+  // Page navigation handler for Sidebar
+  const handlePageChange = (page: string) => {
+    setCurrentPage(page as PageType);
+    setIsSidebarOpen(false);
+  };
 
   return (
     <div className="flex h-screen bg-slate-100 overflow-hidden font-sans">
@@ -390,6 +349,8 @@ function App() {
           shifts={shifts}
           assignments={assignments}
           aiRules={aiRules} 
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
           onAddEmployee={addEmployee} 
           onRemoveEmployee={removeEmployee} 
           onUpdateEmployee={updateEmployee}
@@ -409,18 +370,34 @@ function App() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <ScheduleGrid 
-          shifts={shifts} 
-          assignments={weekAssignments} 
-          employees={employees} 
-          duties={duties} 
-          currentWeekStart={currentWeekStart} 
-          onRemoveAssignment={removeAssignment} 
-          onManualAssign={manualAssign} 
-          onNavigateWeek={navigateWeek} 
-          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-          onToggleChat={() => setIsChatOpen(!isChatOpen)}
-        />
+        {currentPage === 'schedule' && (
+          <ScheduleGrid 
+            shifts={shifts} 
+            assignments={weekAssignments} 
+            employees={employees} 
+            duties={duties} 
+            currentWeekStart={currentWeekStart} 
+            onRemoveAssignment={removeAssignment} 
+            onManualAssign={manualAssign} 
+            onNavigateWeek={navigateWeek} 
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            onToggleChat={() => setIsChatOpen(!isChatOpen)}
+          />
+        )}
+
+        {currentPage === 'handover' && (
+          <ShiftHandover />
+        )}
+
+        {currentPage === 'settings' && (
+          <div className="flex-1 flex items-center justify-center bg-slate-100">
+            <div className="text-center">
+              <Settings size={64} className="mx-auto text-slate-300 mb-4" />
+              <h2 className="text-xl font-bold text-slate-700">Postavke</h2>
+              <p className="text-slate-500">Dodatne postavke uskoro</p>
+            </div>
+          </div>
+        )}
         
         {/* Mobile FABs */}
         {!isSidebarOpen && (
@@ -444,7 +421,7 @@ function App() {
         <ChatInterface 
           messages={chatMessages} 
           onSendMessage={handleAiMessage} 
-          onCancelAi={handleCancelAi} 
+          onCancelAi={() => setIsAiLoading(false)}
           onApplyChanges={handleApplyChanges} 
           onDiscardChanges={handleDiscardChanges} 
           isLoading={isAiLoading} 

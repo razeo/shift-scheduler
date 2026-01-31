@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Calendar, Tag, Settings, Download, Upload, RotateCcw, Plus, Trash2, X, FileText, Save, FolderOpen } from 'lucide-react';
+import { Users, Calendar, Tag, Settings, Download, Upload, RotateCcw, Plus, Trash2, X, FileText, Save, FolderOpen, ArrowLeftRight } from 'lucide-react';
 import { Employee, Shift, Duty, Role, DayOfWeek, ALL_DAYS, ShiftTemplate } from '../../types';
 import { generateId } from '../../utils/id';
 import { exportToCSV, exportToJSON } from '../../utils/storage';
@@ -10,6 +10,8 @@ export interface SidebarProps {
   shifts: Shift[];
   assignments?: any[];
   aiRules: string;
+  currentPage?: string;
+  onPageChange?: (page: string) => void;
   onAddEmployee: (employee: Omit<Employee, 'id'>) => void;
   onRemoveEmployee: (id: string) => void;
   onUpdateEmployee: (employee: Employee) => void;
@@ -31,6 +33,8 @@ export function Sidebar({
   shifts,
   assignments = [],
   aiRules,
+  currentPage = 'schedule',
+  onPageChange = () => {},
   onAddEmployee,
   onRemoveEmployee,
   onUpdateEmployee,
@@ -143,7 +147,6 @@ export function Sidebar({
       return;
     }
     
-    // Create CSV with employee names
     const employeeMap = new Map(employees.map(e => [e.id, e.name]));
     const shiftMap = new Map(shifts.map(s => [s.id, s]));
     
@@ -188,32 +191,18 @@ export function Sidebar({
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-200">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-800">🍽️ Shift Scheduler</h2>
-          <p className="text-xs text-slate-500">Restoran menadžment</p>
-        </div>
-        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg lg:hidden">
-          <X size={20} />
-        </button>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex border-b border-slate-200 overflow-x-auto">
+      {/* Page Navigation */}
+      <div className="flex border-b border-slate-200">
         {[
-          { id: 'employees', icon: Users, label: 'Radnici' },
-          { id: 'shifts', icon: Calendar, label: 'Smjene' },
-          { id: 'duties', icon: Tag, label: 'Dužnosti' },
-          { id: 'templates', icon: FileText, label: 'Šabloni' },
-          { id: 'ai', icon: Settings, label: 'AI' },
+          { id: 'schedule', icon: Calendar, label: 'Raspored' },
+          { id: 'handover', icon: ArrowLeftRight, label: 'Primopredaja' },
           { id: 'settings', icon: Settings, label: 'Postavke' },
         ].map(({ id, icon: Icon, label }) => (
           <button
             key={id}
-            onClick={() => setActiveTab(id as TabType)}
-            className={`flex-shrink-0 p-3 flex flex-col items-center gap-1 text-xs transition-colors ${
-              activeTab === id 
+            onClick={() => onPageChange(id)}
+            className={`flex-1 p-3 flex flex-col items-center gap-1 text-xs transition-colors ${
+              currentPage === id 
                 ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50' 
                 : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
             }`}
@@ -224,10 +213,48 @@ export function Sidebar({
         ))}
       </div>
 
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-slate-200">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-800">🍽️ Shift Scheduler</h2>
+          <p className="text-xs text-slate-500">Restaurant menadžment</p>
+        </div>
+        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg lg:hidden">
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* Tabs - Only show on schedule page */}
+      {currentPage === 'schedule' && (
+        <div className="flex border-b border-slate-200 overflow-x-auto">
+          {[
+            { id: 'employees', icon: Users, label: 'Radnici' },
+            { id: 'shifts', icon: Calendar, label: 'Smjene' },
+            { id: 'duties', icon: Tag, label: 'Dužnosti' },
+            { id: 'templates', icon: FileText, label: 'Šabloni' },
+            { id: 'ai', icon: Settings, label: 'AI' },
+            { id: 'settings', icon: Settings, label: 'Postavke' },
+          ].map(({ id, icon: Icon, label }) => (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id as TabType)}
+              className={`flex-shrink-0 p-3 flex flex-col items-center gap-1 text-xs transition-colors ${
+                activeTab === id 
+                  ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50' 
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              <Icon size={18} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
         {/* EMPLOYEES TAB */}
-        {activeTab === 'employees' && (
+        {currentPage === 'schedule' && activeTab === 'employees' && (
           <div className="p-4 space-y-3">
             {employees.map(employee => (
               <div key={employee.id} className="p-3 bg-slate-50 rounded-lg">
@@ -273,7 +300,6 @@ export function Sidebar({
               </div>
             ))}
             
-            {/* Add Employee Form */}
             {isAdding && (
               <div className="p-4 bg-primary-50 rounded-lg space-y-3">
                 <input
@@ -322,7 +348,6 @@ export function Sidebar({
               </div>
             )}
             
-            {/* Edit Employee Form */}
             {editingId && editEmployee && (
               <div className="p-4 bg-amber-50 rounded-lg space-y-3">
                 <p className="font-medium text-amber-800">Uredi radnika:</p>
@@ -380,7 +405,7 @@ export function Sidebar({
         )}
 
         {/* SHIFTS TAB */}
-        {activeTab === 'shifts' && (
+        {currentPage === 'schedule' && activeTab === 'shifts' && (
           <div className="p-4 space-y-3">
             {shifts.map(shift => (
               <div key={shift.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
@@ -452,7 +477,7 @@ export function Sidebar({
         )}
 
         {/* DUTIES TAB */}
-        {activeTab === 'duties' && (
+        {currentPage === 'schedule' && activeTab === 'duties' && (
           <div className="p-4 space-y-3">
             {duties.map(duty => (
               <div key={duty.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
@@ -499,7 +524,7 @@ export function Sidebar({
         )}
 
         {/* TEMPLATES TAB */}
-        {activeTab === 'templates' && (
+        {currentPage === 'schedule' && activeTab === 'templates' && (
           <div className="p-4 space-y-3">
             {templates.length === 0 && (
               <p className="text-sm text-slate-500 text-center py-4">Nema sačuvanih šablona</p>
@@ -564,7 +589,7 @@ export function Sidebar({
         )}
 
         {/* AI TAB */}
-        {activeTab === 'ai' && (
+        {currentPage === 'schedule' && activeTab === 'ai' && (
           <div className="p-4">
             <h3 className="font-medium text-slate-800 mb-3">Pravila za AI</h3>
             <textarea
@@ -577,7 +602,7 @@ export function Sidebar({
         )}
 
         {/* SETTINGS TAB */}
-        {activeTab === 'settings' && (
+        {currentPage === 'schedule' && activeTab === 'settings' && (
           <div className="p-4 space-y-4">
             <h3 className="font-medium text-slate-800">Podaci</h3>
             
@@ -597,6 +622,13 @@ export function Sidebar({
             <button onClick={onResetAll} className="btn btn-danger w-full flex items-center justify-center gap-2">
               <RotateCcw size={18} /> Resetuj sve
             </button>
+          </div>
+        )}
+
+        {/* Placeholder for other pages */}
+        {currentPage !== 'schedule' && (
+          <div className="p-4 text-center text-slate-500">
+            <p>Koristi navigaciju na vrhu za prebacivanje između modula</p>
           </div>
         )}
       </div>
