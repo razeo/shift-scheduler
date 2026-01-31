@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Bot, Calendar, Users } from 'lucide-react';
 import { Employee, Shift, Assignment, Duty, DayOfWeek } from '../../types';
 import { formatDateToId, getDayName, dayOfWeekToDate } from '../../utils/date';
 
-interface ScheduleGridProps {
+export interface ScheduleGridProps {
   shifts: Shift[];
   assignments: Assignment[];
   employees: Employee[];
@@ -50,7 +50,7 @@ export function ScheduleGrid({
       .map(a => a.employeeId);
   };
 
-  const handleAddEmployee = (shiftId: string, day: DayOfWeek) => {
+  const handleAddEmployee = (shiftId: string, _day: DayOfWeek) => {
     if (employees.length === 0) return;
     
     const assignedEmployeeIds = getAssignedEmployeesForShift(shiftId);
