@@ -27,9 +27,12 @@ import { ShiftHandover } from './components/ShiftHandover';
 import { OutOfStock } from './components/OutOfStock';
 import { ResponsibilityPlan } from './components/ResponsibilityPlan';
 import { RoomService } from './components/RoomService';
+import { WasteList } from './components/WasteList';
+import { DailyMenu } from './components/DailyMenu';
+import { AllergenGuide } from './components/AllergenGuide';
 import { processScheduleRequest, isAiConfigured } from './services/ai';
 
-type PageType = 'schedule' | 'handover' | 'report' | 'outofstock' | 'responsibility' | 'roomservice' | 'settings';
+type PageType = 'schedule' | 'handover' | 'report' | 'outofstock' | 'responsibility' | 'roomservice' | 'wastelist' | 'dailymenu' | 'allergens' | 'settings';
 
 const INITIAL_EMPLOYEES: Employee[] = [
   { id: 'emp-1', name: 'Marko Marković', role: Role.SERVER },
@@ -381,6 +384,18 @@ function App() {
 
         {currentPage === 'roomservice' && (
           <RoomService />
+        )}
+
+        {currentPage === 'wastelist' && (
+          <WasteList />
+        )}
+
+        {currentPage === 'dailymenu' && (
+          <DailyMenu />
+        )}
+
+        {currentPage === 'allergens' && (
+          <AllergenGuide />
         )}
 
         {currentPage === 'settings' && (

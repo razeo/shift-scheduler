@@ -1,0 +1,1 @@
+export { WasteList } from './WasteList';

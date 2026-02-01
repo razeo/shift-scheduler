@@ -1,0 +1,1 @@
+export { AllergenGuide } from './AllergenGuide';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Calendar, Tag, Settings, Download, Upload, RotateCcw, Plus, Trash2, X, FileText, Save, FolderOpen, ArrowLeftRight, AlertTriangle, Bed } from 'lucide-react';
+import { Users, Calendar, Tag, Settings, Download, Upload, RotateCcw, Plus, Trash2, X, FileText, Save, FolderOpen, ArrowLeftRight, AlertTriangle, Bed, Utensils } from 'lucide-react';
 import { Employee, Shift, Duty, Role, DayOfWeek, ALL_DAYS, ShiftTemplate } from '../../types';
 import { generateId } from '../../utils/id';
 import { exportToCSV, exportToJSON } from '../../utils/storage';
@@ -199,6 +199,9 @@ export function Sidebar({
           { id: 'outofstock', icon: AlertTriangle, label: 'Lista 86' },
           { id: 'responsibility', icon: Users, label: 'Plan odgovornosti' },
           { id: 'roomservice', icon: Bed, label: 'Room Service' },
+          { id: 'wastelist', icon: Trash2, label: 'Lista otpisa' },
+          { id: 'dailymenu', icon: Utensils, label: 'Dnevna ponuda' },
+          { id: 'allergens', icon: AlertTriangle, label: 'Alergeni' },
           { id: 'settings', icon: Settings, label: 'Postavke' },
         ].map(({ id, icon: Icon, label }) => (
           <button
