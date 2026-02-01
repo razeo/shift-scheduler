@@ -1,5 +1,7 @@
 {
-  "name": "shiftmaster-ai",
+  "name": "restohub",
+  "title": "RestoHub",
+  "description": "Your restaurant's central hub for operations, scheduling, and team management.",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,6 +14,7 @@
     "lucide-react": "^0.562.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "react-hot-toast": "^2.6.0",
     "xlsx": "0.18.5"
   },
   "devDependencies": {

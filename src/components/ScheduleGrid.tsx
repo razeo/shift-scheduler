@@ -159,7 +159,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
               </div>
               <div>
                 <h2 className="text-3xl font-black text-slate-900 tracking-tight">Planer Smjena</h2>
-                <p className="text-xs text-slate-400 font-medium mt-0.5">ShiftMaster AI</p>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">RestoHub</p>
               </div>
             </div>
             

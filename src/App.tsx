@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import Sidebar from './components/Sidebar';
 import ScheduleGrid from './components/ScheduleGrid';
 import ChatInterface from './components/ChatInterface';
 import { Employee, Shift, Assignment, ChatMessage, ScheduleState, Role, Duty } from './types';
 import { INITIAL_EMPLOYEES, INITIAL_SHIFTS, INITIAL_DUTIES, DEFAULT_AI_RULES } from './constants';
 import { processScheduleRequest } from './services/gemini';
+import { generateId, generateTimestampId, generateAiId, generateEmployeeId, generateDutyId, generateShiftId, generateAssignmentId } from './utils/id';
+import { getMonday, formatDateToId, addWeeks } from './utils/date';
 import { Menu, X, Bot } from 'lucide-react';
 
 const STORAGE_KEYS = {
@@ -15,46 +20,13 @@ const STORAGE_KEYS = {
   AI_RULES: 'shiftmaster_permanent_ai_rules',
 };
 
-const getMonday = (d: Date) => {
-  const date = new Date(d);
-  date.setHours(0, 0, 0, 0);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(date.setDate(diff));
-};
-
-const formatDateToId = (date: Date) => {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-};
-
 const App: React.FC = () => {
-  const [employees, setEmployees] = useState<Employee[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.EMPLOYEES);
-    return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
-  });
-  
-  const [duties, setDuties] = useState<Duty[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.DUTIES);
-    return saved ? JSON.parse(saved) : INITIAL_DUTIES;
-  });
-  
-  const [shifts, setShifts] = useState<Shift[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.SHIFTS);
-    return saved ? JSON.parse(saved) : INITIAL_SHIFTS;
-  });
-  
-  const [assignments, setAssignments] = useState<Assignment[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.ASSIGNMENTS);
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [employees, setEmployees] = useLocalStorage<Employee[]>(STORAGE_KEYS.EMPLOYEES, INITIAL_EMPLOYEES);
+  const [duties, setDuties] = useLocalStorage<Duty[]>(STORAGE_KEYS.DUTIES, INITIAL_DUTIES);
+  const [shifts, setShifts] = useLocalStorage<Shift[]>(STORAGE_KEYS.SHIFTS, INITIAL_SHIFTS);
+  const [assignments, setAssignments] = useLocalStorage<Assignment[]>(STORAGE_KEYS.ASSIGNMENTS, []);
 
-  const [aiRules, setAiRules] = useState<string>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.AI_RULES);
-    return saved !== null ? saved : DEFAULT_AI_RULES;
-  });
+  const [aiRules, setAiRules] = useLocalStorage<string>(STORAGE_KEYS.AI_RULES, DEFAULT_AI_RULES);
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getMonday(new Date()));
@@ -75,26 +47,20 @@ const App: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees)); }, [employees]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.DUTIES, JSON.stringify(duties)); }, [duties]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.SHIFTS, JSON.stringify(shifts)); }, [shifts]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.ASSIGNMENTS, JSON.stringify(assignments)); }, [assignments]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.AI_RULES, aiRules); }, [aiRules]);
-
   const weekAssignments = useMemo(() => assignments.filter(a => a.weekId === currentWeekId), [assignments, currentWeekId]);
 
-  const addEmployee = (newEmp: Omit<Employee, 'id'>) => setEmployees(prev => [...prev, { ...newEmp, id: `emp-${Date.now()}` }]);
+  const addEmployee = (newEmp: Omit<Employee, 'id'>) => setEmployees(prev => [...prev, { ...newEmp, id: generateEmployeeId() }]);
   const removeEmployee = (id: string) => {
     setEmployees(prev => prev.filter(e => e.id !== id));
     setAssignments(prev => prev.filter(a => a.employeeId !== id));
   };
   const updateEmployee = (updated: Employee) => setEmployees(prev => prev.map(e => e.id === updated.id ? updated : e));
 
-  const addDuty = (newDuty: Omit<Duty, 'id'>) => setDuties(prev => [...prev, { ...newDuty, id: `dt-${Date.now()}` }]);
+  const addDuty = (newDuty: Omit<Duty, 'id'>) => setDuties(prev => [...prev, { ...newDuty, id: generateDutyId() }]);
   const removeDuty = (id: string) => setDuties(prev => prev.filter(d => d.id !== id));
   const updateDuty = (updated: Duty) => setDuties(prev => prev.map(d => d.id === updated.id ? updated : d));
 
-  const addShift = (newShift: Omit<Shift, 'id'>) => setShifts(prev => [...prev, { ...newShift, id: `sh-${Date.now()}` }]);
+  const addShift = (newShift: Omit<Shift, 'id'>) => setShifts(prev => [...prev, { ...newShift, id: generateShiftId() }]);
   const removeShift = (id: string) => {
     setShifts(prev => prev.filter(s => s.id !== id));
     setAssignments(prev => prev.filter(a => a.shiftId !== id));
@@ -105,7 +71,7 @@ const App: React.FC = () => {
   const updateAssignment = (id: string, duty: string) => setAssignments(prev => prev.map(a => id === a.id ? { ...a, specialDuty: duty } : a));
   const manualAssign = (shiftId: string, employeeId: string) => {
     if (assignments.some(a => a.shiftId === shiftId && a.employeeId === employeeId && a.weekId === currentWeekId)) return;
-    setAssignments(prev => [...prev, { id: `asg-${Date.now()}`, shiftId, employeeId, weekId: currentWeekId }]);
+    setAssignments(prev => [...prev, { id: generateAssignmentId(), shiftId, employeeId, weekId: currentWeekId }]);
   };
 
   const handleImportData = (data: any) => {
@@ -115,9 +81,9 @@ const App: React.FC = () => {
       if (data.duties) setDuties(data.duties);
       if (data.aiRules !== undefined) setAiRules(data.aiRules);
       if (data.assignments) setAssignments(data.assignments);
-      alert("Podaci su uspješno učitani!");
+      toast.success("Podaci su uspješno učitani!");
     } catch (e) {
-      alert("Greška pri učitavanju fajla.");
+      toast.error("Greška pri učitavanju fajla.");
     }
   };
 
@@ -130,25 +96,24 @@ const App: React.FC = () => {
       setAiRules(DEFAULT_AI_RULES);
       setAssignments([]);
       setChatMessages([]);
+      // toast.success("Aplikacija je resetovana!");
       window.location.reload();
     }
   };
 
   const navigateWeek = (direction: number) => {
-    const nextDate = new Date(currentWeekStart);
-    nextDate.setDate(nextDate.getDate() + direction * 7);
-    setCurrentWeekStart(nextDate);
+    setCurrentWeekStart(addWeeks(currentWeekStart, direction));
   };
 
   const handleAiMessage = async (text: string) => {
-    const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', text, timestamp: Date.now() };
+    const userMsg: ChatMessage = { id: generateTimestampId('msg'), role: 'user', text, timestamp: Date.now() };
     setChatMessages(prev => [...prev, userMsg]);
     setIsAiLoading(true);
     abortControllerRef.current = new AbortController();
     try {
       const result = await processScheduleRequest(text, { employees, duties, shifts, assignments: weekAssignments, currentWeekId, aiRules }, abortControllerRef.current.signal);
       setChatMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
+        id: generateTimestampId('msg'),
         role: 'model',
         text: result.message + "\n\nDa li želite da primijenite ove izmjene u raspored?",
         timestamp: Date.now(),
@@ -158,7 +123,7 @@ const App: React.FC = () => {
       }]);
     } catch (e: any) {
       if (e.message !== "AbortError") {
-        setChatMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'model', text: "Došlo je do greške u komunikaciji sa AI asistentom.", timestamp: Date.now() }]);
+        setChatMessages(prev => [...prev, { id: generateTimestampId('msg'), role: 'model', text: "Došlo je do greške u komunikaciji sa AI asistentom.", timestamp: Date.now() }]);
       }
     } finally {
       setIsAiLoading(false);
@@ -172,14 +137,14 @@ const App: React.FC = () => {
     if (msg.pendingEmployees && msg.pendingEmployees.length > 0) {
       const added: Employee[] = msg.pendingEmployees
         .filter(ne => !employees.some(e => e.name.toLowerCase() === ne.name.toLowerCase()))
-        .map(ne => ({ id: `emp-ai-${Math.random().toString(36).substr(2, 5)}`, name: ne.name, role: ne.role as Role || Role.SERVER }));
+        .map(ne => ({ id: generateAiId('emp'), name: ne.name, role: ne.role as Role || Role.SERVER }));
       if (added.length > 0) setEmployees(prev => [...prev, ...added]);
     }
     const otherWeeksAssignments = assignments.filter(a => a.weekId !== currentWeekId);
     const currentWeekOldAssignments = assignments.filter(a => a.weekId === currentWeekId);
     const newWeekAssignments: Assignment[] = msg.pendingAssignments.map((a, i) => {
       const existing = currentWeekOldAssignments.find(old => old.shiftId === a.shiftId && old.employeeId === a.employeeId);
-      return { id: existing?.id || `asg-ai-${Date.now()}-${i}`, shiftId: a.shiftId, employeeId: a.employeeId, specialDuty: a.specialDuty || existing?.specialDuty, weekId: currentWeekId };
+      return { id: existing?.id || generateAiId('asg'), shiftId: a.shiftId, employeeId: a.employeeId, specialDuty: a.specialDuty || existing?.specialDuty, weekId: currentWeekId };
     });
     setAssignments([...otherWeeksAssignments, ...newWeekAssignments]);
     setChatMessages(prev => prev.map(m => m.id === messageId ? { ...m, status: 'applied' } : m));
@@ -269,6 +234,9 @@ const App: React.FC = () => {
 
       {/* Mobile Overlay */}
       {(isSidebarOpen || isChatOpen) && <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden" onClick={() => { setIsSidebarOpen(false); setIsChatOpen(false); }} />}
+      
+      {/* Toast Notifications */}
+      <Toaster position="top-right" />
     </div>
   );
 };

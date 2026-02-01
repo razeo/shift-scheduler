@@ -1,5 +1,5 @@
 {
-  "name": "ShiftMaster AI",
-  "description": "An AI-powered restaurant shift scheduling assistant. Manage staff, assign roles, and use a chatbot to automatically generate or tweak weekly schedules.",
+  "name": "RestoHub",
+  "description": "Your restaurant's central hub for operations, scheduling, and team management.",
   "requestFramePermissions": []
 }

@@ -105,7 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `ShiftMaster_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `RestoHub_Backup_${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -164,7 +164,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div>
           <h1 className="text-2xl font-black flex items-center gap-2 tracking-tight">
             <Calendar className="w-8 h-8" />
-            ShiftMaster
+            RestoHub
           </h1>
           <p className="text-xs text-indigo-100 font-medium opacity-80 mt-1 uppercase tracking-widest">Restaurant Suite</p>
         </div>

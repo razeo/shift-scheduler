@@ -28,10 +28,7 @@ export const processScheduleRequest = async (
   const apiKey = getApiKey();
 
   if (!apiKey) {
-    return {
-      message: "API ključ nije pronađen. Dodaj VITE_MINIMAX_API_KEY u .env.local fajl.",
-      assignments: currentState.assignments,
-    };
+    throw new Error("API ključ nije pronađen. Dodaj VITE_MINIMAX_API_KEY u .env.local fajl.");
   }
 
   const allowedDuties = currentState.duties.map(d => d.label).join(", ");
@@ -56,7 +53,7 @@ export const processScheduleRequest = async (
     specialDuty: a.specialDuty
   }));
 
-  const systemInstruction = `Ti si ShiftMaster AI, precizan algoritam za raspoređivanje osoblja u restoranu.
+  const systemInstruction = `Ti si RestoHub AI, precizan algoritam za raspoređivanje osoblja u restoranu.
 
 CILJ: Generiši ili ažuriraj JSON objekat koji predstavlja raspored smjena.
 
@@ -93,9 +90,7 @@ ZAHTJEV: "${prompt}"`;
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'MiniMax-M2.1',
