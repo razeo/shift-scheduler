@@ -190,67 +190,66 @@ export function Sidebar({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white w-full max-w-[280px] shrink-0">
       {/* Page Navigation - scrollable on mobile */}
-      <div className="flex border-b border-slate-200 overflow-x-auto scrollbar-thin flex-nowrap">
+      <div className="flex border-b border-slate-200 overflow-x-auto scrollbar-thin flex-nowrap min-w-0">
         {[
           { id: 'schedule', icon: Calendar, label: 'Raspored' },
-          { id: 'handover', icon: ArrowLeftRight, label: 'Primopredaja' },
-          { id: 'outofstock', icon: AlertTriangle, label: 'Lista 86' },
+          { id: 'handover', icon: ArrowLeftRight, label: 'Primop.' },
+          { id: 'outofstock', icon: AlertTriangle, label: '86' },
           { id: 'responsibility', icon: Users, label: 'Plan' },
           { id: 'roomservice', icon: Bed, label: 'Room' },
           { id: 'wastelist', icon: Trash2, label: 'Otpis' },
           { id: 'dailymenu', icon: Utensils, label: 'Meni' },
-          { id: 'allergens', icon: AlertTriangle, label: 'Alergeni' },
+          { id: 'allergens', icon: AlertTriangle, label: 'Alerg.' },
           { id: 'settings', icon: Settings, label: 'Postavke' },
         ].map(({ id, icon: Icon, label }) => (
           <button
             key={id}
             onClick={() => onPageChange(id)}
-            className={`flex-shrink-0 p-3 flex flex-col items-center gap-1 text-xs transition-colors ${
+            className={`flex-shrink-0 p-2 flex flex-col items-center gap-0.5 text-[10px] transition-colors ${
               currentPage === id 
                 ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50' 
                 : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
             }`}
           >
-            <Icon size={18} />
+            <Icon size={16} />
             <span>{label}</span>
           </button>
         ))}
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-200 relative z-10">
+      <div className="flex items-center justify-between p-3 border-b border-slate-200 relative z-10 shrink-0">
         <div>
-          <h2 className="text-lg font-semibold text-slate-800">🍽️ RestoHub</h2>
-          <p className="text-xs text-slate-500">Restaurant menadžment</p>
+          <h2 className="text-base font-semibold text-slate-800">🍽️ RestoHub</h2>
+          <p className="text-[10px] text-slate-500">Restaurant</p>
         </div>
-        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg lg:hidden">
-          <X size={20} />
+        <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-lg lg:hidden">
+          <X size={18} />
         </button>
       </div>
 
       {/* Tabs - Only show on schedule page */}
       {currentPage === 'schedule' && (
-        <div className="flex border-b border-slate-200 overflow-x-auto">
+        <div className="flex border-b border-slate-200 overflow-x-auto scrollbar-thin shrink-0">
           {[
             { id: 'employees', icon: Users, label: 'Radnici' },
             { id: 'shifts', icon: Calendar, label: 'Smjene' },
             { id: 'duties', icon: Tag, label: 'Dužnosti' },
             { id: 'templates', icon: FileText, label: 'Šabloni' },
             { id: 'ai', icon: Settings, label: 'AI' },
-            { id: 'settings', icon: Settings, label: 'Postavke' },
           ].map(({ id, icon: Icon, label }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id as TabType)}
-              className={`flex-shrink-0 p-3 flex flex-col items-center gap-1 text-xs transition-colors ${
+              className={`flex-shrink-0 p-2 flex flex-col items-center gap-0.5 text-[10px] transition-colors ${
                 activeTab === id 
                   ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50' 
                   : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
               }`}
             >
-              <Icon size={18} />
+              <Icon size={14} />
               <span>{label}</span>
             </button>
           ))}
@@ -258,7 +257,7 @@ export function Sidebar({
       )}
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin">
+      <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-2">
         {/* EMPLOYEES TAB */}
         {currentPage === 'schedule' && activeTab === 'employees' && (
           <div className="p-4 space-y-3">
