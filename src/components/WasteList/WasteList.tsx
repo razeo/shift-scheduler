@@ -4,7 +4,7 @@
 // ===========================================
 
 import { useState, useRef, useEffect } from 'react';
-import { Printer, Save, RotateCcw, Check, X, Trash2, Scale, AlertCircle } from 'lucide-react';
+import { Printer, Save, RotateCcw, Check, X, Trash2, Scale, AlertCircle, ArrowLeft } from 'lucide-react';
 import { formatDateToId } from '../../utils/date';
 
 interface WasteEntry {
@@ -171,7 +171,7 @@ export function WasteList({ onClose }: WasteListProps) {
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-red-100 rounded-lg">
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="Povratak na raspored"><ArrowLeft size={20} className="text-slate-600" /></button><div className="p-2 bg-red-100 rounded-lg">
             <Trash2 size={20} className="text-red-600" />
           </div>
           <div>

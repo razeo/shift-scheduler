@@ -4,7 +4,7 @@
 // ===========================================
 
 import { useState, useRef, useEffect } from 'react';
-import { Printer, Save, RotateCcw, Check, X, Users } from 'lucide-react';
+import { Printer, Save, RotateCcw, Check, X, Users, ArrowLeft } from 'lucide-react';
 import { formatDateToId } from '../../utils/date';
 
 interface ResponsibilityEntry {
@@ -163,7 +163,7 @@ export function ResponsibilityPlan({ onClose }: ResponsibilityPlanProps) {
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg transition-colors" title="Povratak na raspored"><ArrowLeft size={20} className="text-slate-600" /></button><div className="p-2 bg-blue-100 rounded-lg">
             <Users size={20} className="text-blue-600" />
           </div>
           <div>

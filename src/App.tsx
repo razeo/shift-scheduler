@@ -427,35 +427,35 @@ function App() {
         )}
 
         {currentPage === 'handover' && (
-          <ShiftHandover />
+          <ShiftHandover onClose={() => setCurrentPage('schedule')} />
         )}
 
         {currentPage === 'report' && (
-          <DailyReport />
+          <DailyReport onClose={() => setCurrentPage('schedule')} />
         )}
 
         {currentPage === 'outofstock' && (
-          <OutOfStock />
+          <OutOfStock onClose={() => setCurrentPage('schedule')} />
         )}
 
         {currentPage === 'responsibility' && (
-          <ResponsibilityPlan />
+          <ResponsibilityPlan onClose={() => setCurrentPage('schedule')} />
         )}
 
         {currentPage === 'roomservice' && (
-          <RoomService />
+          <RoomService onClose={() => setCurrentPage('schedule')} />
         )}
 
         {currentPage === 'wastelist' && (
-          <WasteList />
+          <WasteList onClose={() => setCurrentPage('schedule')} />
         )}
 
         {currentPage === 'dailymenu' && (
-          <DailyMenu />
+          <DailyMenu onClose={() => setCurrentPage('schedule')} />
         )}
 
         {currentPage === 'allergens' && (
-          <AllergenGuide />
+          <AllergenGuide onClose={() => setCurrentPage('schedule')} />
         )}
 
         {currentPage === 'settings' && (
