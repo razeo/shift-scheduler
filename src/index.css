@@ -295,3 +295,153 @@ body {
 .toast-info {
   @apply bg-blue-50 border border-blue-200 text-blue-800;
 }
+
+/* ===========================================
+   Print Styles for Schedule
+   =================================== */
+
+@media print {
+  /* Hide everything by default */
+  body > * {
+    display: none !important;
+  }
+  
+  /* Show only the schedule container */
+  .flex-1.overflow-hidden.bg-slate-100 {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    padding: 20px !important;
+  }
+  
+  /* Hide header controls */
+  .flex.items-center.justify-between button,
+  .hidden.print\:block,
+  .flex.items-center.gap-4 > button,
+  .flex.items-center.gap-2 > button {
+    display: none !important;
+  }
+  
+  /* Show header title only */
+  h1 {
+    font-size: 24px !important;
+    margin-bottom: 10px !important;
+    text-align: center !important;
+  }
+  
+  /* Schedule grid */
+  .schedule-grid {
+    border: 2px solid #333 !important;
+    page-break-inside: avoid;
+  }
+  
+  .schedule-grid > div {
+    border-color: #333 !important;
+  }
+  
+  .schedule-cell {
+    min-height: 60px !important;
+    padding: 4px !important;
+    border-color: #999 !important;
+  }
+  
+  .schedule-cell-header {
+    background: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Remove hover effects */
+  .schedule-cell:hover,
+  .schedule-cell:active {
+    background: white !important;
+  }
+  
+  /* Employee badges */
+  .bg-primary-100 {
+    background: #e0e7ff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .bg-primary-200 {
+    background: #c7d2fe !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Remove buttons from print */
+  .absolute,
+  .group-hover\:opacity-100,
+  .w-full.mt-1,
+  .w-full.h-full.flex {
+    display: none !important;
+  }
+  
+  /* Shift labels */
+  .p-3.bg-slate-50 {
+    background: #f8fafc !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Legend - show in print */
+  .mt-4.flex.flex-wrap.gap-4.text-sm.text-slate-600 {
+    display: flex !important;
+    margin-top: 20px !important;
+    page-break-inside: avoid;
+  }
+  
+  /* Quick Stats */
+  .mt-6.grid.grid-cols-2.md\:grid-cols-4.gap-4 {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 20px !important;
+    margin-top: 20px !important;
+  }
+  
+  .card {
+    border: 1px solid #ddd !important;
+    padding: 10px !important;
+    min-width: 120px !important;
+  }
+  
+  /* Page setup */
+  @page {
+    margin: 1cm;
+    size: landscape;
+  }
+  
+  /* Print date at bottom */
+  body::after {
+    content: "RestoHub - Raspored smjena - " attr(data-print-date);
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #666;
+  }
+}
+
+/* ===========================================
+   Print Layout Specific
+   =================================== */
+
+@media print and (max-width: 768px) {
+  .schedule-grid {
+    font-size: 12px;
+  }
+  
+  .schedule-cell-header div:first-child {
+    font-size: 14px;
+  }
+  
+  .schedule-cell-header div:last-child {
+    font-size: 10px;
+  }
+}

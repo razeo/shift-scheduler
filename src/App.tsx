@@ -82,6 +82,11 @@ function App() {
     getUserId,
   } = useNotifications();
 
+  // Set print date on mount
+  useEffect(() => {
+    document.body.setAttribute('data-print-date', new Date().toLocaleDateString('hr-HR'));
+  }, []);
+
   // Initialize notification services on app load
   useEffect(() => {
     const initializeNotifications = async () => {

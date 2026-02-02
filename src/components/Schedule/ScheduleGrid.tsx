@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Bot, Calendar, Users, Plus, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bot, Calendar, Users, Plus, Check, Printer } from 'lucide-react';
 import { Employee, Shift, Assignment, Duty, DayOfWeek, Role } from '../../types';
 import { formatDateToId, getDayName, dayOfWeekToDate } from '../../utils/date';
 
@@ -202,6 +202,13 @@ export function ScheduleGrid({
               title="Otvori chat"
             >
               <Bot size={20} />
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600"
+              title="Štampaj raspored"
+            >
+              <Printer size={20} />
             </button>
           </div>
         </div>
