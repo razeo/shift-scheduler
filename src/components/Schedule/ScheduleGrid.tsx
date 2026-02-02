@@ -10,7 +10,7 @@ export interface ScheduleGridProps {
   duties: Duty[];
   currentWeekStart: Date;
   onRemoveAssignment: (id: string) => void;
-  onManualAssign: (shiftId: string, employeeId: string, alreadyAddedIds?: string[]) => boolean;
+  onManualAssign: (shiftId: string, employeeId: string, day: DayOfWeek) => boolean;
   onNavigateWeek: (direction: number) => void;
   onToggleSidebar: () => void;
   onToggleChat: () => void;
@@ -35,15 +35,16 @@ export function ScheduleGrid({
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
   const [selectedShiftLabel, setSelectedShiftLabel] = useState<string>('');
+  const [selectedDay, setSelectedDay] = useState<DayOfWeek | null>(null);
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
   
   // Drag and drop state
   const [dragOverCell, setDragOverCell] = useState<string | null>(null);
 
-  // Get all assignments for a specific shift (regardless of day)
-  const getAssignmentsForShift = (shiftId: string): Assignment[] => {
+  // Get assignments for a specific shift AND specific day
+  const getAssignmentsForShiftAndDay = (shiftId: string, day: DayOfWeek): Assignment[] => {
     const weekId = formatDateToId(currentWeekStart);
-    return assignments.filter(a => a.shiftId === shiftId && a.weekId === weekId);
+    return assignments.filter(a => a.shiftId === shiftId && a.weekId === weekId && a.day === day);
   };
 
   const getEmployeeById = (id: string) => {
@@ -54,20 +55,11 @@ export function ScheduleGrid({
     return duties.find(d => d.id === id);
   };
 
-  // Get count of assignments per employee for this shift and day
-  const getAssignedEmployeesForShift = (shiftId: string): string[] => {
-    const shift = shifts.find(s => s.id === shiftId);
-    if (!shift) return [];
-    
-    const weekId = formatDateToId(currentWeekStart);
-    return assignments
-      .filter(a => a.shiftId === shiftId && a.weekId === weekId)
-      .map(a => a.employeeId);
-  };
-
-  const handleOpenAssignModal = (shiftId: string, shiftLabel: string) => {
+  const handleOpenAssignModal = (shiftId: string, shiftLabel: string, day: DayOfWeek) => {
     setSelectedShiftId(shiftId);
     setSelectedShiftLabel(shiftLabel);
+    setSelectedDay(day);
+    setSelectedEmployeeIds(new Set(getAssignmentsForShiftAndDay(shiftId, day).map(a => a.employeeId)));
     setIsAssignModalOpen(true);
   };
 
@@ -75,6 +67,7 @@ export function ScheduleGrid({
     setIsAssignModalOpen(false);
     setSelectedShiftId(null);
     setSelectedShiftLabel('');
+    setSelectedDay(null);
     setSelectedEmployeeIds(new Set());
   };
 
@@ -94,12 +87,12 @@ export function ScheduleGrid({
   };
 
   const handleAddSelectedEmployees = () => {
-    if (!selectedShiftId) return;
+    if (!selectedShiftId || !selectedDay) return;
     
     const alreadyAddedInThisBatch: string[] = [];
     
     selectedEmployeeIds.forEach(id => {
-      const added = onManualAssign(selectedShiftId, id, alreadyAddedInThisBatch);
+      const added = onManualAssign(selectedShiftId, id, selectedDay);
       if (added) {
         alreadyAddedInThisBatch.push(id);
       }
@@ -120,10 +113,10 @@ export function ScheduleGrid({
     setSelectedEmployeeIds(new Set(unassigned.map(e => e.id)));
   };
 
-  // Get assigned employees for the currently selected shift
+  // Get assigned employees for the currently selected shift and day
   const getCurrentAssignedEmployees = (): string[] => {
-    if (!selectedShiftId) return [];
-    return getAssignedEmployeesForShift(selectedShiftId);
+    if (!selectedShiftId || !selectedDay) return [];
+    return getAssignmentsForShiftAndDay(selectedShiftId, selectedDay).map(a => a.employeeId);
   };
 
   // Drag and drop handlers
@@ -141,16 +134,16 @@ export function ScheduleGrid({
     e.preventDefault();
     setDragOverCell(null);
     
-    // Extract shiftId from cellId (format: "shiftId-day")
-    const [shiftId] = cellId.split('-');
+    // Extract shiftId and day from cellId (format: "shiftId-day")
+    const [shiftId, day] = cellId.split('-');
     
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
       if (data.type === 'employee') {
-        // Check if already assigned
-        const assigned = getAssignedEmployeesForShift(shiftId);
+        // Check if already assigned to this specific day
+        const assigned = getAssignmentsForShiftAndDay(shiftId, day as DayOfWeek).map(a => a.employeeId);
         if (!assigned.includes(data.employeeId)) {
-          onManualAssign(shiftId, data.employeeId);
+          onManualAssign(shiftId, data.employeeId, day as DayOfWeek);
         }
       }
     } catch (err) {
@@ -240,7 +233,7 @@ export function ScheduleGrid({
 
               {/* Days - ALL shifts shown for ALL days */}
               {weekDays.map((day) => {
-                const shiftAssignments = getAssignmentsForShift(shift.id);
+                const shiftAssignments = getAssignmentsForShiftAndDay(shift.id, day);
                 const cellId = `${shift.id}-${day}`;
                 
                 return (
@@ -284,7 +277,7 @@ export function ScheduleGrid({
                         </div>
                         {/* Add more button */}
                         <button
-                          onClick={() => handleOpenAssignModal(shift.id, shift.label)}
+                          onClick={() => handleOpenAssignModal(shift.id, shift.label, day)}
                           className="w-full mt-1 py-1 flex items-center justify-center text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors text-xs"
                           title="Dodaj još radnika"
                         >
@@ -293,7 +286,7 @@ export function ScheduleGrid({
                       </>
                     ) : (
                       <button
-                        onClick={() => handleOpenAssignModal(shift.id, shift.label)}
+                        onClick={() => handleOpenAssignModal(shift.id, shift.label, day)}
                         className="w-full h-full flex flex-col items-center justify-center text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-all group"
                         title="Klikni za dodavanje radnika"
                       >

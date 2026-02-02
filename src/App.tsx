@@ -231,22 +231,24 @@ function App() {
     setStorageItem(STORAGE_KEYS.ASSIGNMENTS, filtered);
   };
 
-  const manualAssign = (shiftId: string, employeeId: string, alreadyAddedIds: string[] = []) => {
+  const manualAssign = (shiftId: string, employeeId: string, day: DayOfWeek) => {
     const isDuplicate = assignments.some(a => 
       a.shiftId === shiftId && 
       a.employeeId === employeeId && 
+      a.day === day &&
       a.weekId === currentWeekId
-    ) || alreadyAddedIds.includes(employeeId);
+    );
     
     if (isDuplicate) {
-      return false; // Silent fail for batch operations
+      return false; // Silent fail
     }
     
     const newAssignment: Assignment = { 
       id: generateAssignmentId(), 
       shiftId, 
       employeeId, 
-      weekId: currentWeekId 
+      weekId: currentWeekId,
+      day 
     };
     
     setAssignments(prev => {

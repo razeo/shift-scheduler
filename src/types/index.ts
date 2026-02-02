@@ -68,6 +68,7 @@ export interface Assignment {
   shiftId: string;
   employeeId: string;
   weekId: string;    // ISO week format or Monday's YYYY-MM-DD
+  day: DayOfWeek;    // Day of the week for this specific assignment
   specialDuty?: string;
   notes?: string;
 }
