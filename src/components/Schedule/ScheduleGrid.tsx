@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Bot, Calendar, Users, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bot, Calendar, Users, Plus, Check } from 'lucide-react';
 import { Employee, Shift, Assignment, Duty, DayOfWeek, Role } from '../../types';
 import { formatDateToId, getDayName, dayOfWeekToDate } from '../../utils/date';
 
@@ -35,6 +35,7 @@ export function ScheduleGrid({
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
   const [selectedShiftLabel, setSelectedShiftLabel] = useState<string>('');
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
 
   // Get assignments for a specific shift AND day
   const getAssignmentsForShift = (shiftId: string) => {
@@ -75,17 +76,37 @@ export function ScheduleGrid({
     setIsAssignModalOpen(false);
     setSelectedShiftId(null);
     setSelectedShiftLabel('');
+    setSelectedEmployeeIds(new Set());
   };
 
-  const handleSelectEmployee = (employeeId: string) => {
-    if (selectedShiftId) {
-      // Check if already assigned, if so - don't add again
-      const assigned = getAssignedEmployeesForShift(selectedShiftId);
-      if (assigned.includes(employeeId)) {
-        return;
+  const toggleEmployeeSelection = (employeeId: string) => {
+    const assigned = getCurrentAssignedEmployees();
+    if (assigned.includes(employeeId)) return;
+    
+    setSelectedEmployeeIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(employeeId)) {
+        newSet.delete(employeeId);
+      } else {
+        newSet.add(employeeId);
       }
-      onManualAssign(selectedShiftId, employeeId);
-    }
+      return newSet;
+    });
+  };
+
+  const handleAddSelectedEmployees = () => {
+    if (!selectedShiftId) return;
+    selectedEmployeeIds.forEach(id => {
+      onManualAssign(selectedShiftId, id);
+    });
+    setSelectedEmployeeIds(new Set());
+    handleCloseAssignModal();
+  };
+
+  const handleSelectAllUnassigned = () => {
+    const assigned = getCurrentAssignedEmployees();
+    const unassigned = employees.filter(e => !assigned.includes(e.id));
+    setSelectedEmployeeIds(new Set(unassigned.map(e => e.id)));
   };
 
   // Get assigned employees for the currently selected shift
@@ -206,9 +227,13 @@ export function ScheduleGrid({
                     ) : isShiftDay ? (
                       <button
                         onClick={() => handleOpenAssignModal(shift.id, shift.label)}
-                        className="w-full h-full flex items-center justify-center text-slate-300 hover:text-slate-400 hover:bg-slate-50 transition-colors"
+                        className="w-full h-full flex flex-col items-center justify-center text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-all group"
+                        title="Klikni za dodavanje radnika"
                       >
-                        <Users size={16} />
+                        <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center transition-colors mb-1">
+                          <Plus size={18} className="group-hover:text-primary-600" />
+                        </div>
+                        <span className="text-[10px] group-hover:text-primary-600">Dodaj</span>
                       </button>
                     ) : null}
                   </div>
@@ -280,44 +305,102 @@ export function ScheduleGrid({
                   Nema registrovanih radnika
                 </p>
               ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-slate-600 mb-3">Izaberi radnika za ovu smjenu:</p>
-                  {employees.map(employee => {
-                    const assigned = getCurrentAssignedEmployees();
-                    const isAlreadyAssigned = assigned.includes(employee.id);
-                    return (
+                <>
+                  {/* Multi-select header */}
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
+                    <div>
+                      <p className="text-sm text-slate-600">Izaberi radnike:</p>
+                      <p className="text-xs text-slate-400">Označavanjem ćeš dodati više radnika odjednom</p>
+                    </div>
+                    <button
+                      onClick={handleSelectAllUnassigned}
+                      className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+                    >
+                      Označi sve
+                    </button>
+                  </div>
+
+                  {/* Employees list with checkboxes */}
+                  <div className="space-y-2">
+                    {employees.map(employee => {
+                      const assigned = getCurrentAssignedEmployees();
+                      const isAlreadyAssigned = assigned.includes(employee.id);
+                      const isSelected = selectedEmployeeIds.has(employee.id);
+                      
+                      return (
+                        <button
+                          key={employee.id}
+                          onClick={() => {
+                            if (!isAlreadyAssigned) {
+                              toggleEmployeeSelection(employee.id);
+                            }
+                          }}
+                          disabled={isAlreadyAssigned}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${
+                            isAlreadyAssigned 
+                              ? 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed'
+                              : isSelected
+                              ? 'bg-primary-50 border-primary-300'
+                              : 'bg-white border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
+                            isAlreadyAssigned 
+                              ? 'border-slate-300 bg-slate-200' 
+                              : isSelected
+                              ? 'border-primary-500 bg-primary-500'
+                              : 'border-slate-300'
+                          }`}>
+                            {isSelected && <Check size={14} className="text-white" />}
+                          </div>
+                          
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                            employee.role === Role.CHEF ? 'bg-orange-100 text-orange-700' :
+                            employee.role === Role.MANAGER ? 'bg-purple-100 text-purple-700' :
+                            employee.role === Role.BARTENDER ? 'bg-emerald-100 text-emerald-700' :
+                            employee.role === Role.SERVER ? 'bg-blue-100 text-blue-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
+                            {employee.name.charAt(0)}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-slate-800">{employee.name}</p>
+                            <p className="text-xs text-slate-500">{employee.role}</p>
+                          </div>
+                          {isAlreadyAssigned ? (
+                            <span className="text-xs text-green-600 font-medium">Već dodan</span>
+                          ) : isSelected ? (
+                            <span className="text-xs text-primary-600 font-medium">Označen</span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Selected count and add button */}
+                  {selectedEmployeeIds.size > 0 && (
+                    <div className="mt-4 pt-4 border-t border-slate-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm text-slate-600">
+                          Označeno: <strong>{selectedEmployeeIds.size}</strong> radnika
+                        </span>
+                        <button
+                          onClick={() => setSelectedEmployeeIds(new Set())}
+                          className="text-xs text-slate-400 hover:text-slate-600"
+                        >
+                          Poništi
+                        </button>
+                      </div>
                       <button
-                        key={employee.id}
-                        onClick={() => handleSelectEmployee(employee.id)}
-                        disabled={isAlreadyAssigned}
-                        className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left ${
-                          isAlreadyAssigned 
-                            ? 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed'
-                            : 'bg-white border-slate-200 hover:bg-primary-50 hover:border-primary-300'
-                        }`}
+                        onClick={handleAddSelectedEmployees}
+                        className="w-full btn btn-primary flex items-center justify-center gap-2"
                       >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
-                          employee.role === Role.CHEF ? 'bg-orange-100 text-orange-700' :
-                          employee.role === Role.MANAGER ? 'bg-purple-100 text-purple-700' :
-                          employee.role === Role.BARTENDER ? 'bg-emerald-100 text-emerald-700' :
-                          employee.role === Role.SERVER ? 'bg-blue-100 text-blue-700' :
-                          'bg-slate-100 text-slate-700'
-                        }`}>
-                          {employee.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-medium text-slate-800">{employee.name}</p>
-                          <p className="text-xs text-slate-500">{employee.role}</p>
-                        </div>
-                        {isAlreadyAssigned ? (
-                          <span className="ml-auto text-xs text-green-600 font-medium">✓ Dodan</span>
-                        ) : (
-                          <Plus size={18} className="ml-auto text-slate-400" />
-                        )}
+                        <Plus size={18} />
+                        Dodaj označene ({selectedEmployeeIds.size})
                       </button>
-                    );
-                  })}
-                </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Already assigned employees summary */}
