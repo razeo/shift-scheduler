@@ -322,7 +322,13 @@ export function ScheduleGrid({
           </div>
           <div className="flex items-center gap-2">
             <Users size={16} className="text-slate-300" />
-            <span>Prazno (klikni za dodavanje)</span>
+            <span>Klikni + za dodavanje</span>
+          </div>
+          <div className="flex items-center gap-2 hidden lg:flex">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-400">
+              <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3"/>
+            </svg>
+            <span>Prevuci radnika (desktop)</span>
           </div>
         </div>
 
