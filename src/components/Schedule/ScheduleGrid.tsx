@@ -194,9 +194,6 @@ export function ScheduleGrid({
             <h1 className="text-xl font-bold text-slate-800">
               📅 Raspored smjena
             </h1>
-            <div className="week-date-range">
-              {getWeekDateRange()}
-            </div>
           </div>
           
           {/* Week Navigation */}
@@ -207,8 +204,8 @@ export function ScheduleGrid({
             >
               <ChevronLeft size={20} />
             </button>
-            <span className="text-sm font-medium text-slate-700 min-w-[140px] text-center">
-              {formatDateToId(currentWeekStart)}
+            <span className="text-sm font-medium text-slate-700 min-w-[160px] text-center">
+              {getWeekDateRange()}
             </span>
             <button 
               onClick={() => onNavigateWeek(1)}
