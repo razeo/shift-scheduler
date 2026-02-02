@@ -1,6 +1,6 @@
-import React from 'react';
-import { ChevronLeft, ChevronRight, Bot, Calendar, Users } from 'lucide-react';
-import { Employee, Shift, Assignment, Duty, DayOfWeek } from '../../types';
+import React, { useState } from 'react';
+import { ChevronLeft, ChevronRight, Bot, Calendar, Users, Plus } from 'lucide-react';
+import { Employee, Shift, Assignment, Duty, DayOfWeek, Role } from '../../types';
 import { formatDateToId, getDayName, dayOfWeekToDate } from '../../utils/date';
 
 export interface ScheduleGridProps {
@@ -31,6 +31,11 @@ export function ScheduleGrid({
   const weekDays = Object.values(DayOfWeek);
   const weekDates = weekDays.map(day => dayOfWeekToDate(currentWeekStart, day));
 
+  // Modal state for manual employee assignment
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
+  const [selectedShiftLabel, setSelectedShiftLabel] = useState<string>('');
+
   // Get assignments for a specific shift AND day
   const getAssignmentsForShift = (shiftId: string) => {
     const shift = shifts.find(s => s.id === shiftId);
@@ -60,21 +65,27 @@ export function ScheduleGrid({
       .map(a => a.employeeId);
   };
 
-  const handleAddEmployee = (shiftId: string) => {
-    if (employees.length === 0) return;
-    
-    const assignedEmployeeIds = getAssignedEmployeesForShift(shiftId);
-    
-    // Find next unassigned employee
-    const nextEmployee = employees.find(emp => !assignedEmployeeIds.includes(emp.id));
-    
-    if (nextEmployee) {
-      onManualAssign(shiftId, nextEmployee.id);
-    } else if (employees.length > assignedEmployeeIds.length) {
-      // All current employees assigned, cycle back to first
-      onManualAssign(shiftId, employees[0].id);
+  const handleOpenAssignModal = (shiftId: string, shiftLabel: string) => {
+    setSelectedShiftId(shiftId);
+    setSelectedShiftLabel(shiftLabel);
+    setIsAssignModalOpen(true);
+  };
+
+  const handleCloseAssignModal = () => {
+    setIsAssignModalOpen(false);
+    setSelectedShiftId(null);
+    setSelectedShiftLabel('');
+  };
+
+  const handleSelectEmployee = (employeeId: string) => {
+    if (selectedShiftId) {
+      onManualAssign(selectedShiftId, employeeId);
+      handleCloseAssignModal();
     }
   };
+
+  const assignedEmployees = selectedShiftId ? getAssignedEmployeesForShift(selectedShiftId) : [];
+  const availableEmployees = employees.filter(emp => !assignedEmployees.includes(emp.id));
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-slate-100">
@@ -187,7 +198,7 @@ export function ScheduleGrid({
                       </div>
                     ) : isShiftDay ? (
                       <button
-                        onClick={() => handleAddEmployee(shift.id)}
+                        onClick={() => handleOpenAssignModal(shift.id, shift.label)}
                         className="w-full h-full flex items-center justify-center text-slate-300 hover:text-slate-400 hover:bg-slate-50 transition-colors"
                       >
                         <Users size={16} />
@@ -236,6 +247,85 @@ export function ScheduleGrid({
           </div>
         </div>
       </div>
+
+      {/* Manual Assignment Modal */}
+      {isAssignModalOpen && selectedShiftId && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">Dodaj radnika</h2>
+                <p className="text-sm text-slate-500">{selectedShiftLabel}</p>
+              </div>
+              <button 
+                onClick={handleCloseAssignModal}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              {availableEmployees.length === 0 ? (
+                <p className="text-center text-slate-500 py-8">
+                  {assignedEmployees.length > 0 
+                    ? 'Svi radnici su već dodijeljeni ovoj smjeni'
+                    : 'Nema dostupnih radnika'}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm text-slate-600 mb-3">Izaberi radnika:</p>
+                  {availableEmployees.map(employee => (
+                    <button
+                      key={employee.id}
+                      onClick={() => handleSelectEmployee(employee.id)}
+                      className="w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-primary-50 hover:border-primary-200 border border-slate-200 transition-colors text-left"
+                    >
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                        employee.role === Role.CHEF ? 'bg-orange-100 text-orange-700' :
+                        employee.role === Role.MANAGER ? 'bg-purple-100 text-purple-700' :
+                        employee.role === Role.BARTENDER ? 'bg-emerald-100 text-emerald-700' :
+                        employee.role === Role.SERVER ? 'bg-blue-100 text-blue-700' :
+                        'bg-slate-100 text-slate-700'
+                      }`}>
+                        {employee.name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-800">{employee.name}</p>
+                        <p className="text-xs text-slate-500">{employee.role}</p>
+                      </div>
+                      <Plus size={18} className="ml-auto text-slate-400" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Already assigned employees */}
+              {assignedEmployees.length > 0 && (
+                <div className="mt-6 pt-4 border-t border-slate-200">
+                  <p className="text-sm text-slate-600 mb-3">Već dodijeljeni:</p>
+                  <div className="space-y-2">
+                    {assignedEmployees.map(empId => {
+                      const employee = employees.find(e => e.id === empId);
+                      if (!employee) return null;
+                      return (
+                        <div key={empId} className="flex items-center gap-3 p-2 rounded-lg bg-slate-100">
+                          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-xs font-bold text-primary-700">
+                            {employee.name.charAt(0)}
+                          </div>
+                          <span className="text-sm text-slate-700">{employee.name}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
