@@ -152,10 +152,11 @@ export function ScheduleGrid({
               {/* Days */}
               {weekDays.map((day) => {
                 const shiftAssignments = getAssignmentsForShift(shift.id);
+                const isShiftDay = shift.day === day;
                 
                 return (
-                  <div key={`${shift.id}-${day}`} className="schedule-cell border-r border-slate-200 last:border-r-0">
-                    {shiftAssignments.length > 0 ? (
+                  <div key={`${shift.id}-${day}`} className={`schedule-cell border-r border-slate-200 last:border-r-0 ${!isShiftDay ? 'opacity-50' : ''}`}>
+                    {isShiftDay && shiftAssignments.length > 0 ? (
                       <div className="space-y-1">
                         {shiftAssignments.map(assignment => {
                           const employee = getEmployeeById(assignment.employeeId);
@@ -184,14 +185,14 @@ export function ScheduleGrid({
                           );
                         })}
                       </div>
-                    ) : (
+                    ) : isShiftDay ? (
                       <button
                         onClick={() => handleAddEmployee(shift.id)}
                         className="w-full h-full flex items-center justify-center text-slate-300 hover:text-slate-400 hover:bg-slate-50 transition-colors"
                       >
                         <Users size={16} />
                       </button>
-                    )}
+                    ) : null}
                   </div>
                 );
               })}
