@@ -80,19 +80,19 @@ export function ScheduleGrid({
   const handleSelectEmployee = (employeeId: string) => {
     if (selectedShiftId) {
       // Check if already assigned, if so - don't add again
-      const isAlreadyAssigned = assignedEmployees.includes(employeeId);
-      if (isAlreadyAssigned) {
-        // Maybe show a message or just close
-        handleCloseAssignModal();
+      const assigned = getAssignedEmployeesForShift(selectedShiftId);
+      if (assigned.includes(employeeId)) {
         return;
       }
       onManualAssign(selectedShiftId, employeeId);
-      handleCloseAssignModal();
     }
   };
 
-  // Show ALL employees (not filtered), highlight already assigned
-  const assignedEmployees = selectedShiftId ? getAssignedEmployeesForShift(selectedShiftId) : [];
+  // Get assigned employees for the currently selected shift
+  const getCurrentAssignedEmployees = (): string[] => {
+    if (!selectedShiftId) return [];
+    return getAssignedEmployeesForShift(selectedShiftId);
+  };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-slate-100">
@@ -283,7 +283,8 @@ export function ScheduleGrid({
                 <div className="space-y-2">
                   <p className="text-sm text-slate-600 mb-3">Izaberi radnika za ovu smjenu:</p>
                   {employees.map(employee => {
-                    const isAlreadyAssigned = assignedEmployees.includes(employee.id);
+                    const assigned = getCurrentAssignedEmployees();
+                    const isAlreadyAssigned = assigned.includes(employee.id);
                     return (
                       <button
                         key={employee.id}
@@ -320,13 +321,13 @@ export function ScheduleGrid({
               )}
 
               {/* Already assigned employees summary */}
-              {assignedEmployees.length > 0 && (
+              {getCurrentAssignedEmployees().length > 0 && (
                 <div className="mt-6 pt-4 border-t border-slate-200">
                   <p className="text-sm text-slate-600 mb-3">
-                    Već dodijeljeni ({assignedEmployees.length}):
+                    Već dodijeljeni ({getCurrentAssignedEmployees().length}):
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {assignedEmployees.map(empId => {
+                    {getCurrentAssignedEmployees().map(empId => {
                       const employee = employees.find(e => e.id === empId);
                       if (!employee) return null;
                       return (
@@ -338,6 +339,16 @@ export function ScheduleGrid({
                   </div>
                 </div>
               )}
+
+              {/* Close button at bottom */}
+              <div className="mt-6 pt-4 border-t border-slate-200">
+                <button
+                  onClick={handleCloseAssignModal}
+                  className="w-full btn btn-secondary"
+                >
+                  Zatvori
+                </button>
+              </div>
             </div>
           </div>
         </div>
