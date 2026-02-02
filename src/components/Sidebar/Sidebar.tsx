@@ -191,23 +191,23 @@ export function Sidebar({
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Page Navigation */}
-      <div className="flex border-b border-slate-200">
+      {/* Page Navigation - scrollable on mobile */}
+      <div className="flex border-b border-slate-200 overflow-x-auto scrollbar-thin flex-nowrap">
         {[
           { id: 'schedule', icon: Calendar, label: 'Raspored' },
           { id: 'handover', icon: ArrowLeftRight, label: 'Primopredaja' },
           { id: 'outofstock', icon: AlertTriangle, label: 'Lista 86' },
-          { id: 'responsibility', icon: Users, label: 'Plan odgovornosti' },
-          { id: 'roomservice', icon: Bed, label: 'Room Service' },
-          { id: 'wastelist', icon: Trash2, label: 'Lista otpisa' },
-          { id: 'dailymenu', icon: Utensils, label: 'Dnevna ponuda' },
+          { id: 'responsibility', icon: Users, label: 'Plan' },
+          { id: 'roomservice', icon: Bed, label: 'Room' },
+          { id: 'wastelist', icon: Trash2, label: 'Otpis' },
+          { id: 'dailymenu', icon: Utensils, label: 'Meni' },
           { id: 'allergens', icon: AlertTriangle, label: 'Alergeni' },
           { id: 'settings', icon: Settings, label: 'Postavke' },
         ].map(({ id, icon: Icon, label }) => (
           <button
             key={id}
             onClick={() => onPageChange(id)}
-            className={`flex-1 p-3 flex flex-col items-center gap-1 text-xs transition-colors ${
+            className={`flex-shrink-0 p-3 flex flex-col items-center gap-1 text-xs transition-colors ${
               currentPage === id 
                 ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50' 
                 : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
@@ -220,9 +220,9 @@ export function Sidebar({
       </div>
 
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-200">
+      <div className="flex items-center justify-between p-4 border-b border-slate-200 relative z-10">
         <div>
-          <h2 className="text-lg font-semibold text-slate-800">🍽️ Shift Scheduler</h2>
+          <h2 className="text-lg font-semibold text-slate-800">🍽️ RestoHub</h2>
           <p className="text-xs text-slate-500">Restaurant menadžment</p>
         </div>
         <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg lg:hidden">
