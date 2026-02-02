@@ -31,8 +31,14 @@ export function ScheduleGrid({
   const weekDays = Object.values(DayOfWeek);
   const weekDates = weekDays.map(day => dayOfWeekToDate(currentWeekStart, day));
 
+  // Get assignments for a specific shift AND day
   const getAssignmentsForShift = (shiftId: string) => {
-    return assignments.filter(a => a.shiftId === shiftId);
+    const shift = shifts.find(s => s.id === shiftId);
+    if (!shift) return [];
+    
+    // Only return assignments where the shift's day matches AND same week
+    const weekId = formatDateToId(currentWeekStart);
+    return assignments.filter(a => a.shiftId === shiftId && a.weekId === weekId);
   };
 
   const getEmployeeById = (id: string) => {
@@ -43,14 +49,18 @@ export function ScheduleGrid({
     return duties.find(d => d.id === id);
   };
 
-  // Get count of assignments per employee for this shift
+  // Get count of assignments per employee for this shift and day
   const getAssignedEmployeesForShift = (shiftId: string): string[] => {
+    const shift = shifts.find(s => s.id === shiftId);
+    if (!shift) return [];
+    
+    const weekId = formatDateToId(currentWeekStart);
     return assignments
-      .filter(a => a.shiftId === shiftId)
+      .filter(a => a.shiftId === shiftId && a.weekId === weekId)
       .map(a => a.employeeId);
   };
 
-  const handleAddEmployee = (shiftId: string, _day: DayOfWeek) => {
+  const handleAddEmployee = (shiftId: string) => {
     if (employees.length === 0) return;
     
     const assignedEmployeeIds = getAssignedEmployeesForShift(shiftId);
@@ -176,7 +186,7 @@ export function ScheduleGrid({
                       </div>
                     ) : (
                       <button
-                        onClick={() => handleAddEmployee(shift.id, day)}
+                        onClick={() => handleAddEmployee(shift.id)}
                         className="w-full h-full flex items-center justify-center text-slate-300 hover:text-slate-400 hover:bg-slate-50 transition-colors"
                       >
                         <Users size={16} />
