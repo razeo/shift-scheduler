@@ -79,13 +79,20 @@ export function ScheduleGrid({
 
   const handleSelectEmployee = (employeeId: string) => {
     if (selectedShiftId) {
+      // Check if already assigned, if so - don't add again
+      const isAlreadyAssigned = assignedEmployees.includes(employeeId);
+      if (isAlreadyAssigned) {
+        // Maybe show a message or just close
+        handleCloseAssignModal();
+        return;
+      }
       onManualAssign(selectedShiftId, employeeId);
       handleCloseAssignModal();
     }
   };
 
+  // Show ALL employees (not filtered), highlight already assigned
   const assignedEmployees = selectedShiftId ? getAssignedEmployeesForShift(selectedShiftId) : [];
-  const availableEmployees = employees.filter(emp => !assignedEmployees.includes(emp.id));
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-slate-100">
@@ -268,54 +275,63 @@ export function ScheduleGrid({
 
             {/* Modal Body */}
             <div className="p-4 overflow-y-auto max-h-[60vh]">
-              {availableEmployees.length === 0 ? (
+              {employees.length === 0 ? (
                 <p className="text-center text-slate-500 py-8">
-                  {assignedEmployees.length > 0 
-                    ? 'Svi radnici su već dodijeljeni ovoj smjeni'
-                    : 'Nema dostupnih radnika'}
+                  Nema registrovanih radnika
                 </p>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-sm text-slate-600 mb-3">Izaberi radnika:</p>
-                  {availableEmployees.map(employee => (
-                    <button
-                      key={employee.id}
-                      onClick={() => handleSelectEmployee(employee.id)}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg bg-slate-50 hover:bg-primary-50 hover:border-primary-200 border border-slate-200 transition-colors text-left"
-                    >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
-                        employee.role === Role.CHEF ? 'bg-orange-100 text-orange-700' :
-                        employee.role === Role.MANAGER ? 'bg-purple-100 text-purple-700' :
-                        employee.role === Role.BARTENDER ? 'bg-emerald-100 text-emerald-700' :
-                        employee.role === Role.SERVER ? 'bg-blue-100 text-blue-700' :
-                        'bg-slate-100 text-slate-700'
-                      }`}>
-                        {employee.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-800">{employee.name}</p>
-                        <p className="text-xs text-slate-500">{employee.role}</p>
-                      </div>
-                      <Plus size={18} className="ml-auto text-slate-400" />
-                    </button>
-                  ))}
+                  <p className="text-sm text-slate-600 mb-3">Izaberi radnika za ovu smjenu:</p>
+                  {employees.map(employee => {
+                    const isAlreadyAssigned = assignedEmployees.includes(employee.id);
+                    return (
+                      <button
+                        key={employee.id}
+                        onClick={() => handleSelectEmployee(employee.id)}
+                        disabled={isAlreadyAssigned}
+                        className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left ${
+                          isAlreadyAssigned 
+                            ? 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed'
+                            : 'bg-white border-slate-200 hover:bg-primary-50 hover:border-primary-300'
+                        }`}
+                      >
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                          employee.role === Role.CHEF ? 'bg-orange-100 text-orange-700' :
+                          employee.role === Role.MANAGER ? 'bg-purple-100 text-purple-700' :
+                          employee.role === Role.BARTENDER ? 'bg-emerald-100 text-emerald-700' :
+                          employee.role === Role.SERVER ? 'bg-blue-100 text-blue-700' :
+                          'bg-slate-100 text-slate-700'
+                        }`}>
+                          {employee.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-800">{employee.name}</p>
+                          <p className="text-xs text-slate-500">{employee.role}</p>
+                        </div>
+                        {isAlreadyAssigned ? (
+                          <span className="ml-auto text-xs text-green-600 font-medium">✓ Dodan</span>
+                        ) : (
+                          <Plus size={18} className="ml-auto text-slate-400" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
-              {/* Already assigned employees */}
+              {/* Already assigned employees summary */}
               {assignedEmployees.length > 0 && (
                 <div className="mt-6 pt-4 border-t border-slate-200">
-                  <p className="text-sm text-slate-600 mb-3">Već dodijeljeni:</p>
-                  <div className="space-y-2">
+                  <p className="text-sm text-slate-600 mb-3">
+                    Već dodijeljeni ({assignedEmployees.length}):
+                  </p>
+                  <div className="flex flex-wrap gap-2">
                     {assignedEmployees.map(empId => {
                       const employee = employees.find(e => e.id === empId);
                       if (!employee) return null;
                       return (
-                        <div key={empId} className="flex items-center gap-3 p-2 rounded-lg bg-slate-100">
-                          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-xs font-bold text-primary-700">
-                            {employee.name.charAt(0)}
-                          </div>
-                          <span className="text-sm text-slate-700">{employee.name}</span>
+                        <div key={empId} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-100 text-primary-700 text-sm">
+                          <span>{employee.name}</span>
                         </div>
                       );
                     })}
