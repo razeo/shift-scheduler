@@ -36,6 +36,9 @@ export function ScheduleGrid({
   const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null);
   const [selectedShiftLabel, setSelectedShiftLabel] = useState<string>('');
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
+  
+  // Drag and drop state
+  const [dragOverCell, setDragOverCell] = useState<string | null>(null);
 
   // Get assignments for a specific shift AND day
   const getAssignmentsForShift = (shiftId: string) => {
@@ -127,6 +130,35 @@ export function ScheduleGrid({
     return getAssignedEmployeesForShift(selectedShiftId);
   };
 
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent, shiftId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    setDragOverCell(shiftId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverCell(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, shiftId: string) => {
+    e.preventDefault();
+    setDragOverCell(null);
+    
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.type === 'employee') {
+        // Check if already assigned
+        const assigned = getAssignedEmployeesForShift(shiftId);
+        if (!assigned.includes(data.employeeId)) {
+          onManualAssign(shiftId, data.employeeId);
+        }
+      }
+    } catch (err) {
+      console.error('Invalid drop data:', err);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-slate-100">
       {/* Header */}
@@ -206,7 +238,13 @@ export function ScheduleGrid({
                 const isShiftDay = shift.day === day;
                 
                 return (
-                  <div key={`${shift.id}-${day}`} className={`schedule-cell border-r border-slate-200 last:border-r-0 ${!isShiftDay ? 'opacity-50' : ''}`}>
+                  <div 
+                    key={`${shift.id}-${day}`}
+                    onDragOver={(e) => handleDragOver(e, shift.id)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, shift.id)}
+                    className={`schedule-cell border-r border-slate-200 last:border-r-0 relative ${!isShiftDay ? 'opacity-50' : ''} ${dragOverCell === shift.id && isShiftDay ? 'bg-primary-100 ring-2 ring-primary-400 ring-inset' : ''}`}
+                  >
                     {isShiftDay && shiftAssignments.length > 0 ? (
                       <>
                         {/* Assigned employees */}
@@ -259,6 +297,16 @@ export function ScheduleGrid({
                         <span className="text-[10px] group-hover:text-primary-600">Dodaj</span>
                       </button>
                     ) : null}
+                    
+                    {/* Drag hint - only on desktop and empty cells */}
+                    {isShiftDay && shiftAssignments.length === 0 && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="text-center text-slate-300 opacity-0 hover:opacity-100 transition-opacity">
+                          <Plus size={24} className="mx-auto mb-1" />
+                          <span className="text-xs">Prevuci radnika</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}

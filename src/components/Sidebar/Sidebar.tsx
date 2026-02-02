@@ -262,11 +262,34 @@ export function Sidebar({
         {currentPage === 'schedule' && activeTab === 'employees' && (
           <div className="p-4 space-y-3">
             {employees.map(employee => (
-              <div key={employee.id} className="p-3 bg-slate-50 rounded-lg">
+              <div 
+                key={employee.id} 
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('application/json', JSON.stringify({
+                    type: 'employee',
+                    employeeId: employee.id,
+                    employeeName: employee.name,
+                    employeeRole: employee.role
+                  }));
+                  e.dataTransfer.effectAllowed = 'copy';
+                }}
+                className="p-3 bg-slate-50 rounded-lg cursor-grab active:cursor-grabbing hover:bg-slate-100 transition-colors"
+              >
                 <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <p className="font-medium text-slate-800">{employee.name}</p>
-                    <p className="text-xs text-slate-500">{employee.role}</p>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                      employee.role === Role.CHEF ? 'bg-orange-100 text-orange-700' :
+                      employee.role === Role.MANAGER ? 'bg-purple-100 text-purple-700' :
+                      employee.role === Role.BARTENDER ? 'bg-emerald-100 text-emerald-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                      {employee.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-800">{employee.name}</p>
+                      <p className="text-xs text-slate-500">{employee.role}</p>
+                    </div>
                   </div>
                   <div className="flex gap-1">
                     <button 
