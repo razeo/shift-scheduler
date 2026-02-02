@@ -62,6 +62,7 @@ export function Sidebar({
     label: '' 
   });
   const [newTemplate, setNewTemplate] = useState({ name: '', description: '' });
+  const [applyShiftToAllDays, setApplyShiftToAllDays] = useState(false);
 
   // Load templates from localStorage
   const [templates, setTemplates] = useState<ShiftTemplate[]>(() => {
@@ -459,15 +460,6 @@ export function Sidebar({
                   onChange={(e) => setNewShift({ ...newShift, label: e.target.value })}
                   className="input"
                 />
-                <select
-                  value={newShift.day}
-                  onChange={(e) => setNewShift({ ...newShift, day: e.target.value as DayOfWeek })}
-                  className="input"
-                >
-                  {ALL_DAYS.map(day => (
-                    <option key={day} value={day}>{day}</option>
-                  ))}
-                </select>
                 <div className="flex gap-2">
                   <input
                     type="time"
@@ -482,14 +474,56 @@ export function Sidebar({
                     className="input"
                   />
                 </div>
+                
+                {/* Apply to all days */}
+                <label className="flex items-center gap-2 p-2 bg-white rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={applyShiftToAllDays}
+                    onChange={(e) => setApplyShiftToAllDays(e.target.checked)}
+                    className="w-4 h-4 text-primary-600 rounded"
+                  />
+                  <span className="text-sm text-slate-700">Primeni na sve dane</span>
+                </label>
+                
+                {!applyShiftToAllDays && (
+                  <select
+                    value={newShift.day}
+                    onChange={(e) => setNewShift({ ...newShift, day: e.target.value as DayOfWeek })}
+                    className="input"
+                  >
+                    {ALL_DAYS.map(day => (
+                      <option key={day} value={day}>{day}</option>
+                    ))}
+                  </select>
+                )}
+                
+                {applyShiftToAllDays && (
+                  <div className="flex flex-wrap gap-1">
+                    {ALL_DAYS.map(day => (
+                      <span key={day} className="text-xs px-2 py-1 bg-white rounded text-slate-600">
+                        {day.slice(0, 3)}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
                 <div className="flex gap-2">
                   <button onClick={() => {
-                    onAddShift(newShift);
+                    if (applyShiftToAllDays) {
+                      // Create shift for each day
+                      ALL_DAYS.forEach(day => {
+                        onAddShift({ day, startTime: newShift.startTime, endTime: newShift.endTime, label: newShift.label });
+                      });
+                    } else {
+                      onAddShift(newShift);
+                    }
                     setNewShift({ day: DayOfWeek.MONDAY, startTime: '08:00', endTime: '16:00', label: '' });
+                    setApplyShiftToAllDays(false);
                   }} className="btn btn-primary flex-1">
                     Dodaj
                   </button>
-                  <button onClick={() => { setIsAdding(false); setNewShift({ day: DayOfWeek.MONDAY, startTime: '08:00', endTime: '16:00', label: '' }); }} className="btn btn-secondary">
+                  <button onClick={() => { setIsAdding(false); setNewShift({ day: DayOfWeek.MONDAY, startTime: '08:00', endTime: '16:00', label: '' }); setApplyShiftToAllDays(false); }} className="btn btn-secondary">
                     Otkaži
                   </button>
                 </div>
