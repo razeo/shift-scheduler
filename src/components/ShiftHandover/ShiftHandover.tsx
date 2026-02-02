@@ -420,7 +420,7 @@ export function ShiftHandover({ onClose }: ShiftHandoverProps) {
 
           {/* Print Footer */}
           <div className="hidden print:block mt-6 text-center text-xs text-slate-400">
-            Generisano putem Shift Scheduler - {formatDateToId(new Date())}
+            Generisano putem RestoHub - {formatDateToId(new Date())}
           </div>
         </div>
 

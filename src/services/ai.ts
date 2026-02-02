@@ -1,5 +1,5 @@
 // ===========================================
-// AI Service for Shift Scheduler
+// AI Service for RestoHub
 // Handles communication with Groq API (free, fast)
 // ===========================================
 
@@ -41,7 +41,7 @@ export const processScheduleRequest = async (
     availability: e.availability || ALL_DAYS
   }));
 
-  const systemMessage = `Ti si ShiftMaster AI, precizan algoritam za raspoređivanje osoblja u restoranu.
+  const systemMessage = `Ti si RestoHub AI, precizan algoritam za raspoređivanje osoblja u restoranu.
 
 CILJ: Generiši ili ažuriraj JSON objekat koji predstavlja raspored smjena.
 

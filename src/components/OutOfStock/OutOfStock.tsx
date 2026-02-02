@@ -375,7 +375,7 @@ export function OutOfStock({ onClose }: OutOfStockProps) {
           </div>
 
           <div className="hidden print:block mt-4 text-center text-xs text-slate-400">
-            Generisano putem Shift Scheduler - {formatDateToId(new Date())}
+            Generisano putem RestoHub - {formatDateToId(new Date())}
           </div>
         </div>
 

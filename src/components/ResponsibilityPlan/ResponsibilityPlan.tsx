@@ -380,7 +380,7 @@ export function ResponsibilityPlan({ onClose }: ResponsibilityPlanProps) {
 
           {/* Print Footer */}
           <div className="hidden print:block mt-4 text-center text-xs text-slate-400">
-            Generisano putem Shift Scheduler - {currentEntry.date} {shiftLabel}
+            Generisano putem RestoHub - {currentEntry.date} {shiftLabel}
           </div>
         </div>
 

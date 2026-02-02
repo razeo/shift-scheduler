@@ -300,7 +300,7 @@ export function AllergenGuide({ onClose }: AllergenGuideProps) {
           </div>
 
           <div className="hidden print:block mt-4 text-center text-xs text-slate-400">
-            Generisano putem Shift Scheduler - SIGURNOST NAŠIH GOSTIJU JE NAŠ PRIORITET
+            Generisano putem RestoHub - SIGURNOST NAŠIH GOSTIJU JE NAŠ PRIORITET
           </div>
         </div>
       </div>

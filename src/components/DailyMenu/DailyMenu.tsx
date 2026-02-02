@@ -343,7 +343,7 @@ export function DailyMenu({ onClose }: DailyMenuProps) {
           </div>
 
           <div className="hidden print:block mt-4 text-center text-xs text-slate-400">
-            Generisano putem Shift Scheduler - {currentEntry.date}
+            Generisano putem RestoHub - {currentEntry.date}
           </div>
         </div>
 

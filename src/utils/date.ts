@@ -1,5 +1,5 @@
 // ===========================================
-// Date Utilities for Shift Scheduler
+// Date Utilities for RestoHub
 // Week calculations, formatting, and date helpers
 // ===========================================
 

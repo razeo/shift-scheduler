@@ -1,5 +1,5 @@
 // ===========================================
-// Core Types for Shift Scheduler
+// Core Types for RestoHub
 // ===========================================
 
 export enum Role {

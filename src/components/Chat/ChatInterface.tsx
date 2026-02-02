@@ -64,7 +64,7 @@ export function ChatInterface({
             <Bot size={20} className="text-primary-600" />
           </div>
           <div>
-            <h2 className="font-semibold text-slate-800">ShiftMaster AI</h2>
+            <h2 className="font-semibold text-slate-800">RestoHub AI</h2>
             <p className="text-xs text-slate-500">
               {isLoading ? 'Razmišljam...' : 'Spreman'}
             </p>
