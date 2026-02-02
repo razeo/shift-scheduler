@@ -40,12 +40,8 @@ export function ScheduleGrid({
   // Drag and drop state
   const [dragOverCell, setDragOverCell] = useState<string | null>(null);
 
-  // Get assignments for a specific shift AND day
-  const getAssignmentsForShift = (shiftId: string) => {
-    const shift = shifts.find(s => s.id === shiftId);
-    if (!shift) return [];
-    
-    // Only return assignments where the shift's day matches AND same week
+  // Get all assignments for a specific shift (regardless of day)
+  const getAssignmentsForShift = (shiftId: string): Assignment[] => {
     const weekId = formatDateToId(currentWeekStart);
     return assignments.filter(a => a.shiftId === shiftId && a.weekId === weekId);
   };
@@ -131,19 +127,22 @@ export function ScheduleGrid({
   };
 
   // Drag and drop handlers
-  const handleDragOver = (e: React.DragEvent, shiftId: string) => {
+  const handleDragOver = (e: React.DragEvent, cellId: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
-    setDragOverCell(shiftId);
+    setDragOverCell(cellId);
   };
 
   const handleDragLeave = () => {
     setDragOverCell(null);
   };
 
-  const handleDrop = (e: React.DragEvent, shiftId: string) => {
+  const handleDrop = (e: React.DragEvent, cellId: string) => {
     e.preventDefault();
     setDragOverCell(null);
+    
+    // Extract shiftId from cellId (format: "shiftId-day")
+    const [shiftId] = cellId.split('-');
     
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
@@ -239,20 +238,20 @@ export function ScheduleGrid({
                 <div className="text-xs text-slate-500">{shift.startTime}-{shift.endTime}</div>
               </div>
 
-              {/* Days */}
+              {/* Days - ALL shifts shown for ALL days */}
               {weekDays.map((day) => {
                 const shiftAssignments = getAssignmentsForShift(shift.id);
-                const isShiftDay = shift.day === day;
+                const cellId = `${shift.id}-${day}`;
                 
                 return (
                   <div 
-                    key={`${shift.id}-${day}`}
-                    onDragOver={(e) => handleDragOver(e, shift.id)}
+                    key={cellId}
+                    onDragOver={(e) => handleDragOver(e, cellId)}
                     onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, shift.id)}
-                    className={`schedule-cell border-r border-slate-200 last:border-r-0 relative ${!isShiftDay ? 'opacity-50' : ''} ${dragOverCell === shift.id && isShiftDay ? 'bg-primary-100 ring-2 ring-primary-400 ring-inset' : ''}`}
+                    onDrop={(e) => handleDrop(e, cellId)}
+                    className={`schedule-cell border-r border-slate-200 last:border-r-0 relative ${dragOverCell === cellId ? 'bg-primary-100 ring-2 ring-primary-400 ring-inset' : ''}`}
                   >
-                    {isShiftDay && shiftAssignments.length > 0 ? (
+                    {shiftAssignments.length > 0 ? (
                       <>
                         {/* Assigned employees */}
                         <div className="space-y-1">
@@ -292,7 +291,7 @@ export function ScheduleGrid({
                           <Plus size={14} className="mr-1" /> Dodaj
                         </button>
                       </>
-                    ) : isShiftDay ? (
+                    ) : (
                       <button
                         onClick={() => handleOpenAssignModal(shift.id, shift.label)}
                         className="w-full h-full flex flex-col items-center justify-center text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-all group"
@@ -303,10 +302,10 @@ export function ScheduleGrid({
                         </div>
                         <span className="text-[10px] group-hover:text-primary-600">Dodaj</span>
                       </button>
-                    ) : null}
+                    )}
                     
-                    {/* Drag hint - only on desktop and empty cells */}
-                    {isShiftDay && shiftAssignments.length === 0 && (
+                    {/* Drag hint */}
+                    {shiftAssignments.length === 0 && (
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="text-center text-slate-300 opacity-0 hover:opacity-100 transition-opacity">
                           <Plus size={24} className="mx-auto mb-1" />
