@@ -722,8 +722,8 @@ export function Sidebar({
           </div>
         )}
 
-        {/* SETTINGS TAB */}
-        {currentPage === 'schedule' && activeTab === 'settings' && (
+        {/* SETTINGS PAGE */}
+        {currentPage === 'settings' && (
           <div className="p-4 space-y-4">
             <h3 className="font-medium text-slate-800">Podaci</h3>
             
@@ -747,9 +747,14 @@ export function Sidebar({
         )}
 
         {/* Placeholder for other pages */}
-        {currentPage !== 'schedule' && (
-          <div className="p-4 text-center text-slate-500">
-            <p>Koristi navigaciju na vrhu za prebacivanje između modula</p>
+        {currentPage !== 'schedule' && currentPage !== 'settings' && (
+          <div className="p-4 space-y-4">
+            <button 
+              onClick={() => onPageChange?.('schedule')}
+              className="btn btn-primary w-full flex items-center justify-center gap-2"
+            >
+              <Calendar size={18} /> Vrati se na Raspored
+            </button>
           </div>
         )}
       </div>
