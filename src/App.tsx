@@ -358,7 +358,7 @@ function App() {
         setStorageItem(STORAGE_KEYS.ASSIGNMENTS, data.assignments);
       }
       toast.success('Podaci uvezeni!');
-    } catch (e) {
+    } catch {
       toast.error('Greška pri uvozu podataka');
     }
   };

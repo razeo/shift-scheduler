@@ -75,13 +75,13 @@ export function WasteList({ onClose }: WasteListProps) {
     const today = formatDateToId(new Date());
     const existing = entries.find(e => e.date === today);
     if (existing) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      
       setCurrentEntry(existing);
     }
   }, [entries]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     setCurrentEntry(prev => ({
       ...prev,
       totalValue: prev.items.reduce((sum, item) => sum + item.quantity, 0),

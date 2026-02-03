@@ -178,7 +178,7 @@ export function importFromJSON(file: File): Promise<any> {
     reader.onload = (e) => {
       try {
         resolve(JSON.parse(e.target?.result as string));
-      } catch (error) {
+      } catch {
         reject(new Error('Invalid JSON file'));
       }
     };

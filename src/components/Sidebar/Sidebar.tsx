@@ -69,7 +69,7 @@ export function Sidebar({
     try {
       const stored = localStorage.getItem('shift_scheduler_templates');
       return stored ? JSON.parse(stored) : [];
-    } catch (error) {
+    } catch {
       return [];
     }
   });
@@ -182,7 +182,7 @@ export function Sidebar({
         try {
           const data = JSON.parse(event.target?.result as string);
           onImportData(data);
-        } catch (error) {
+        } catch {
           alert('Greška pri uvozu: nevažeći JSON');
         }
       };

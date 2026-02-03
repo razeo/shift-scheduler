@@ -94,7 +94,7 @@ export function DailyReport({ onClose }: DailyReportProps) {
     const today = formatDateToId(new Date());
     const existing = entries.find(e => e.date === today);
     if (existing) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      
       setCurrentEntry(existing);
     }
   }, [entries]);

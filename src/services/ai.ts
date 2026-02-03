@@ -111,7 +111,7 @@ IZLAZ (SAMO JSON, bez markdown):
         assignments: parsed.newAssignments || [],
         newEmployees: parsed.employeesToAdd || [],
       };
-    } catch (parseError) {
+    } catch {
       console.error('JSON Parse Error. Raw:', content);
       throw new Error('Format odgovora nije ispravan. Pokušajte ponovo.');
     }
