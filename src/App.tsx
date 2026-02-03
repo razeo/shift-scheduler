@@ -5,7 +5,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { Menu, Settings, Bell } from 'lucide-react';
+import { Menu, Settings, Bell, Upload, Download, FileText, RotateCcw } from 'lucide-react';
 import { STORAGE_KEYS, runMigrations, getStorageItem, setStorageItem, clearAllStorage } from './utils/storage';
 import { generateEmployeeId, generateDutyId, generateShiftId, generateAssignmentId } from './utils/id';
 import { getMonday, formatDateToId, addWeeks } from './utils/date';
@@ -549,6 +549,104 @@ function App() {
                 <h4 className="font-medium text-slate-700 mb-2">ID Korisnika</h4>
                 <p className="text-sm text-slate-500 font-mono">{getUserId()}</p>
                 <p className="text-xs text-slate-400 mt-2">Koristi se za registraciju obavijesti</p>
+              </div>
+              
+              {/* Import/Export Section */}
+              <div className="mt-8 pt-8 border-t border-slate-200">
+                <h3 className="text-lg font-semibold text-slate-700 mb-4">💾 Podaci</h3>
+                
+                {/* Import */}
+                <label className="btn btn-secondary w-full flex items-center justify-center gap-2 mb-3 cursor-pointer">
+                  <Upload size={18} /> Uvoz podataka
+                  <input 
+                    type="file" 
+                    accept=".json" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          try {
+                            const data = JSON.parse(event.target?.result as string);
+                            handleImportData(data);
+                            toast.success('Podaci uvezeni!');
+                          } catch (err) {
+                            toast.error('Greška pri uvozu');
+                          }
+                        };
+                        reader.readAsText(file);
+                      }
+                    }} 
+                    className="hidden" 
+                  />
+                </label>
+                
+                {/* Export JSON */}
+                <button 
+                  onClick={() => {
+                    const data = {
+                      employees,
+                      shifts,
+                      duties,
+                      assignments: weekAssignments,
+                      aiRules,
+                    };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `restohub-${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    toast.success('JSON izvezen!');
+                  }}
+                  className="btn btn-secondary w-full flex items-center justify-center gap-2 mb-3"
+                >
+                  <Download size={18} /> Izvoz JSON
+                </button>
+                
+                {/* Export CSV */}
+                <button 
+                  onClick={() => {
+                    if (weekAssignments.length === 0) {
+                      toast.error('Nema dodjela za export');
+                      return;
+                    }
+                    const headers = ['Dan', 'Smjena', 'Vrijeme', 'Radnik', 'Uloga'];
+                    const rows = weekAssignments.map(a => {
+                      const shift = shifts.find(s => s.id === a.shiftId);
+                      const emp = employees.find(e => e.id === a.employeeId);
+                      const day = shift?.day || '';
+                      const time = shift ? `${shift.startTime}-${shift.endTime}` : '';
+                      return [day, shift?.label || '', time, emp?.name || '', emp?.role || ''].join(',');
+                    });
+                    const csv = [headers.join(','), ...rows].join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `raspored-${new Date().toISOString().split('T')[0]}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    toast.success('CSV izvezen!');
+                  }}
+                  className="btn btn-secondary w-full flex items-center justify-center gap-2 mb-3"
+                >
+                  <FileText size={18} /> Izvoz CSV
+                </button>
+                
+                {/* Reset All */}
+                <button 
+                  onClick={() => {
+                    if (window.confirm('Da li ste sigurni da želite resetovati sve podatke?')) {
+                      handleResetAll();
+                      toast.success('Svi podaci su resetovani!');
+                    }
+                  }}
+                  className="btn btn-danger w-full flex items-center justify-center gap-2"
+                >
+                  <RotateCcw size={18} /> Resetuj sve
+                </button>
               </div>
             </div>
           </div>
