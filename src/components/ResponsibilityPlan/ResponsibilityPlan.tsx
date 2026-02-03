@@ -83,7 +83,7 @@ export function ResponsibilityPlan({ onClose }: ResponsibilityPlanProps) {
     }
   }, [entries, currentEntry.shift]);
 
-  const handleInputChange = (field: keyof ResponsibilityEntry, value: any) => {
+  const handleInputChange = (field: keyof ResponsibilityEntry, value: string) => {
     setCurrentEntry(prev => ({ ...prev, [field]: value }));
     setIsSaved(false);
   };

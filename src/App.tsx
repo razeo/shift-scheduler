@@ -36,6 +36,14 @@ import { isFcmConfigured, isTelegramConfigured } from './services/notifications'
 
 type PageType = 'schedule' | 'handover' | 'report' | 'outofstock' | 'responsibility' | 'roomservice' | 'wastelist' | 'dailymenu' | 'allergens' | 'settings';
 
+interface ImportData {
+  employees?: Employee[];
+  shifts?: Shift[];
+  duties?: Duty[];
+  assignments?: Assignment[];
+  aiRules?: string;
+}
+
 const INITIAL_EMPLOYEES: Employee[] = [
   { id: 'emp-1', name: 'Marko Marković', role: Role.SERVER },
   { id: 'emp-2', name: 'Jovan Jovanović', role: Role.CHEF },
@@ -225,6 +233,13 @@ function App() {
     if (shift) toast.success(`Uklonjena smjena: ${shift.label}`);
   };
 
+  const updateShift = (updatedShift: Shift) => {
+    const updated = shifts.map(s => s.id === updatedShift.id ? updatedShift : s);
+    setShifts(updated);
+    setStorageItem(STORAGE_KEYS.SHIFTS, updated);
+    toast.success(`Ažurirana smjena: ${updatedShift.label}`);
+  };
+
   const removeAssignment = (id: string) => {
     const filtered = assignments.filter(a => a.id !== id);
     setAssignments(filtered);
@@ -301,8 +316,8 @@ function App() {
       };
       setChatMessages(prev => [...prev, modelMsg]);
       toast.success('AI je generisao prijedlog');
-    } catch (error: any) {
-      setAiError(error.message || 'Greška');
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : 'Greška');
     } finally {
       setIsAiLoading(false);
     }
@@ -335,7 +350,7 @@ function App() {
     toast.success('Izmjene odbacene');
   };
 
-  const handleImportData = (data: any) => {
+  const handleImportData = (data: ImportData) => {
     try {
       if (data.employees) {
         setEmployees(data.employees);
@@ -407,6 +422,7 @@ function App() {
           onRemoveDuty={removeDuty} 
           onAddShift={addShift}
           onRemoveShift={removeShift}
+          onUpdateShift={updateShift}
           onUpdateAiRules={(rules: string) => {
             setAiRules(rules);
             setStorageItem(STORAGE_KEYS.AI_RULES, rules);

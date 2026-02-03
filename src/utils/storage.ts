@@ -129,7 +129,7 @@ export function clearAllStorage(): void {
 /**
  * Export data to JSON file
  */
-export function exportToJSON(data: any, filename: string): void {
+export function exportToJSON<T>(data: T, filename: string): void {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -142,7 +142,7 @@ export function exportToJSON(data: any, filename: string): void {
 /**
  * Export data to CSV
  */
-export function exportToCSV(data: any[], filename: string): void {
+export function exportToCSV<T extends Record<string, unknown>>(data: T[], filename: string): void {
   if (data.length === 0) return;
   
   const headers = Object.keys(data[0]);
@@ -172,12 +172,12 @@ export function exportToCSV(data: any[], filename: string): void {
 /**
  * Import JSON from file
  */
-export function importFromJSON(file: File): Promise<any> {
+export function importFromJSON<T = unknown>(file: File): Promise<T> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        resolve(JSON.parse(e.target?.result as string));
+        resolve(JSON.parse(e.target?.result as string) as T);
       } catch {
         reject(new Error('Invalid JSON file'));
       }

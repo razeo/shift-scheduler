@@ -80,14 +80,14 @@ export function DailyMenu({ onClose }: DailyMenuProps) {
     }
   }, [entries]);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string) => {
     setCurrentEntry(prev => {
       if (field.includes('.')) {
         const [parent, child] = field.split('.');
         return {
           ...prev,
           [parent]: {
-            ...(prev as any)[parent],
+            ...(prev[parent as keyof DailyMenuEntry] as object),
             [child]: value,
           },
         };

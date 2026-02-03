@@ -152,8 +152,7 @@ export const useNotifications = (): UseNotificationsReturn => {
 
       if (success) {
         toast.success(`Subscribed to ${sector} notifications`);
-        // Note: refreshSubscriptions is defined later in the file
-        // This is safe because useCallback creates stable function references
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         await refreshSubscriptions();
       }
 
@@ -173,6 +172,7 @@ export const useNotifications = (): UseNotificationsReturn => {
       // For now, we just clear local subscription
       // In production, you'd call the API to remove subscriptions
       toast.success(`Unsubscribed from ${sector}`);
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
       await refreshSubscriptions();
       return true;
     } catch (error) {

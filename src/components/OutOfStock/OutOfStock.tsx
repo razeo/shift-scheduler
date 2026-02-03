@@ -80,7 +80,7 @@ export function OutOfStock({ onClose }: OutOfStockProps) {
     }
   }, [entries]);
 
-  const handleInputChange = (field: keyof OutOfStockEntry, value: any) => {
+  const handleInputChange = (field: keyof OutOfStockEntry, value: string) => {
     setCurrentEntry(prev => ({ ...prev, [field]: value }));
     setIsSaved(false);
   };
@@ -337,7 +337,7 @@ export function OutOfStock({ onClose }: OutOfStockProps) {
                   <input
                     type="checkbox"
                     checked={currentEntry[item.key] as boolean}
-                    onChange={(e) => handleInputChange(item.key, e.target.checked)}
+                    onChange={(e) => handleInputChange(item.key, e.target.checked ? 'true' : 'false')}
                     className="w-4 h-4 text-amber-600"
                   />
                   <span className="text-sm">{item.label}</span>

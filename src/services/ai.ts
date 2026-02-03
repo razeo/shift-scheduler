@@ -115,12 +115,13 @@ IZLAZ (SAMO JSON, bez markdown):
       console.error('JSON Parse Error. Raw:', content);
       throw new Error('Format odgovora nije ispravan. Pokušajte ponovo.');
     }
-  } catch (error: any) {
-    if (error.name === 'AbortError' || error.message === 'AbortError') {
+  } catch (error) {
+    if (error instanceof Error && (error.name === 'AbortError' || error.message === 'AbortError')) {
       throw error;
     }
     console.error('AI Service Error:', error);
-    throw new Error(error.message || 'Došlo je do greške u komunikaciji sa AI servisom.');
+    const errorMessage = error instanceof Error ? error.message : 'Došlo je do greške';
+    throw new Error(errorMessage || 'Došlo je do greške u komunikaciji sa AI servisom.');
   }
 };
 

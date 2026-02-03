@@ -258,9 +258,14 @@ export const getNotificationLogs = async (
 };
 
 // Real-time subscription to notifications
+interface NotificationPayload {
+  new?: { id: string; message: string; created_at: string };
+  old?: { id: string };
+}
+
 export const subscribeToRealTimeNotifications = (
   userId: string,
-  callback: (payload: any) => void
+  callback: (payload: NotificationPayload) => void
 ): (() => void) => {
   try {
     const client = getSupabaseClient();
@@ -269,14 +274,14 @@ export const subscribeToRealTimeNotifications = (
     const subscription = client
       .channel(`user-notifications-${userId}`)
       .on(
-        'postgres_changes',
+        'postgres_changes' as const,
         {
           event: 'INSERT',
           schema: 'public',
           table: 'notification_logs',
           filter: `user_id=eq.${userId}`,
         },
-        callback
+        callback as (payload: unknown) => void
       )
       .subscribe();
 

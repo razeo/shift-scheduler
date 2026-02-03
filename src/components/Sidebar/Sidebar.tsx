@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Users, Calendar, Tag, Settings, Download, Upload, RotateCcw, Plus, Trash2, X, FileText, Save, FolderOpen, ArrowLeftRight, AlertTriangle, Bed, Utensils } from 'lucide-react';
-import { Employee, Shift, Duty, Role, DayOfWeek, ALL_DAYS, ShiftTemplate } from '../../types/index';
+import { Employee, Shift, Duty, Role, DayOfWeek, ALL_DAYS, ShiftTemplate, Assignment } from '../../types/index';
 import { generateId } from '../../utils/id';
 import { exportToCSV, exportToJSON } from '../../utils/storage';
 
@@ -8,7 +8,7 @@ export interface SidebarProps {
   employees: Employee[];
   duties: Duty[];
   shifts: Shift[];
-  assignments?: any[];
+  assignments?: Assignment[];
   aiRules: string;
   currentPage?: string;
   onPageChange?: (page: string) => void;
@@ -19,6 +19,7 @@ export interface SidebarProps {
   onRemoveDuty: (id: string) => void;
   onAddShift: (shift: Omit<Shift, 'id'>) => void;
   onRemoveShift: (id: string) => void;
+  onUpdateShift: (shift: Shift) => void;
   onUpdateAiRules: (rules: string) => void;
   onResetAll: () => void;
   onImportData: (data: any) => void;
@@ -42,6 +43,7 @@ export function Sidebar({
   onRemoveDuty,
   onAddShift,
   onRemoveShift,
+  onUpdateShift,
   onUpdateAiRules,
   onResetAll,
   onImportData,
@@ -61,6 +63,7 @@ export function Sidebar({
     endTime: '16:00', 
     label: '' 
   });
+  const [editShift, setEditShift] = useState<Shift | null>(null);
   const [newTemplate, setNewTemplate] = useState({ name: '', description: '' });
   const [applyShiftToAllDays, setApplyShiftToAllDays] = useState(false);
 
@@ -442,14 +445,70 @@ export function Sidebar({
                   <p className="font-medium text-slate-800">{shift.label}</p>
                   <p className="text-xs text-slate-500">{shift.day} {shift.startTime}-{shift.endTime}</p>
                 </div>
-                <button 
-                  onClick={() => onRemoveShift(shift.id)}
-                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
-                >
-                  <Trash2 size={16} />
-                </button>
+                <div className="flex gap-1">
+                  <button 
+                    onClick={() => setEditShift(shift)}
+                    className="p-2 text-slate-500 hover:bg-slate-200 rounded-lg"
+                  >
+                    <Settings size={16} />
+                  </button>
+                  <button 
+                    onClick={() => onRemoveShift(shift.id)}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))}
+            
+            {/* Edit Shift Form */}
+            {editShift && (
+              <div className="p-4 bg-amber-50 rounded-lg space-y-3 border border-amber-200">
+                <h3 className="font-medium text-amber-800">Uredi smjenu</h3>
+                <input
+                  type="text"
+                  placeholder="Naziv smjene"
+                  value={editShift.label}
+                  onChange={(e) => setEditShift({ ...editShift, label: e.target.value })}
+                  className="input"
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="time"
+                    value={editShift.startTime}
+                    onChange={(e) => setEditShift({ ...editShift, startTime: e.target.value })}
+                    className="input"
+                  />
+                  <input
+                    type="time"
+                    value={editShift.endTime}
+                    onChange={(e) => setEditShift({ ...editShift, endTime: e.target.value })}
+                    className="input"
+                  />
+                </div>
+                <select
+                  value={editShift.day}
+                  onChange={(e) => setEditShift({ ...editShift, day: e.target.value as DayOfWeek })}
+                  className="input"
+                >
+                  {ALL_DAYS.map(day => (
+                    <option key={day} value={day}>{day}</option>
+                  ))}
+                </select>
+                <div className="flex gap-2">
+                  <button onClick={() => {
+                    onUpdateShift(editShift);
+                    setEditShift(null);
+                  }} className="btn btn-primary flex-1">
+                    Sačuvaj
+                  </button>
+                  <button onClick={() => setEditShift(null)} className="btn btn-secondary">
+                    Otkaži
+                  </button>
+                </div>
+              </div>
+            )}
             
             {isAdding && (
               <div className="p-4 bg-primary-50 rounded-lg space-y-3">

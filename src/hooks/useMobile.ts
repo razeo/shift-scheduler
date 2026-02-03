@@ -53,11 +53,12 @@ export function useMobile(): MobileDetectResult {
 
 // Capacitor platform detection
 export function isCapacitorApp(): boolean {
-  return typeof (window as any).Capacitor !== 'undefined';
+  return typeof window !== 'undefined' && 
+         'Capacitor' in window;
 }
 
 // Check if running as PWA
 export function isPWA(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches ||
-         (window.navigator as any).standalone === true;
+         (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 }

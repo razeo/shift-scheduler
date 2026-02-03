@@ -133,8 +133,8 @@ ZAHTJEV: "${prompt}"`;
       console.error("JSON Parse Error. Raw:", content);
       throw new Error("Format odgovora nije ispravan.");
     }
-  } catch (error: any) {
-    if (error.message === "AbortError" || signal?.aborted) {
+  } catch (error) {
+    if (error instanceof Error && error.message === "AbortError" || signal?.aborted) {
       throw error;
     }
     console.error("AI Service Error:", error);
