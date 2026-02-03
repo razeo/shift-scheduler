@@ -17,7 +17,7 @@ import {
   ChatMessage, 
   Role, 
   DayOfWeek,
-  ScheduleState 
+  ScheduleState
 } from './types';
 import { Sidebar } from './components/Sidebar';
 import { ScheduleGrid } from './components/Schedule';
@@ -30,6 +30,8 @@ import { RoomService } from './components/RoomService';
 import { WasteList } from './components/WasteList';
 import { DailyMenu } from './components/DailyMenu';
 import { AllergenGuide } from './components/AllergenGuide';
+import { Login } from './components/Auth/Login';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { processScheduleRequest, isAiConfigured } from './services/ai';
 import { useNotifications } from './hooks/useNotifications';
 import { isFcmConfigured, isTelegramConfigured } from './services/notifications';
@@ -79,6 +81,13 @@ const DEFAULT_AI_RULES = `• Svaki radnik ima max 5 smjena sedmično
 • Vikendi su za iskusne radnike`;
 
 function App() {
+  const { user } = useAuth();
+  
+  // Show login if not authenticated
+  if (!user) {
+    return <Login />;
+  }
+  
   // Initialize notifications
   const {
     requestPermission,
@@ -703,4 +712,10 @@ function App() {
   );
 }
 
-export default App;
+export function RestoHubApp() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+}
