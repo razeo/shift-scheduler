@@ -38,7 +38,7 @@ import { processScheduleRequest, isAiConfigured } from './services/ai';
 import { useNotifications } from './hooks/useNotifications';
 import { isFcmConfigured, isTelegramConfigured } from './services/notifications';
 
-type PageType = 'schedule' | 'handover' | 'report' | 'outofstock' | 'responsibility' | 'roomservice' | 'wastelist' | 'dailymenu' | 'allergens' | 'settings' | 'users' | 'permissions';
+type PageType = 'schedule' | 'employees' | 'shifts' | 'duties' | 'templates' | 'ai' | 'handover' | 'report' | 'outofstock' | 'responsibility' | 'roomservice' | 'wastelist' | 'dailymenu' | 'allergens' | 'settings' | 'users' | 'permissions';
 
 interface ImportData {
   employees?: Employee[];
@@ -493,6 +493,56 @@ function App() {
 
         {currentPage === 'allergens' && (
           <AllergenGuide onClose={() => { setCurrentPage('schedule'); setIsSidebarOpen(true); }} />
+        )}
+
+        {/* Employees Page */}
+        {currentPage === 'employees' && (
+          <div className="flex-1 bg-slate-100 p-6 overflow-auto">
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <h2 className="text-xl font-bold text-slate-800 mb-4">Upravljanje radnicima</h2>
+              <p className="text-slate-600">Ovdje će biti lista radnika sa mogućnošću dodavanja, uređivanja i brisanja.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Shifts Page */}
+        {currentPage === 'shifts' && (
+          <div className="flex-1 bg-slate-100 p-6 overflow-auto">
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <h2 className="text-xl font-bold text-slate-800 mb-4">Upravljanje smjenama</h2>
+              <p className="text-slate-600">Ovdje će biti definicije smjena (jutarnja, večernja, itd.).</p>
+            </div>
+          </div>
+        )}
+
+        {/* Duties Page */}
+        {currentPage === 'duties' && (
+          <div className="flex-1 bg-slate-100 p-6 overflow-auto">
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <h2 className="text-xl font-bold text-slate-800 mb-4">Upravljanje dužnostima</h2>
+              <p className="text-slate-600">Ovdje će biti lista dužnosti (glavni kuvar, pomoćni, itd.).</p>
+            </div>
+          </div>
+        )}
+
+        {/* Templates Page */}
+        {currentPage === 'templates' && (
+          <div className="flex-1 bg-slate-100 p-6 overflow-auto">
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <h2 className="text-xl font-bold text-slate-800 mb-4">Šabloni rasporeda</h2>
+              <p className="text-slate-600">Ovdje će biti sačuvani šabloni za brzo kreiranje rasporeda.</p>
+            </div>
+          </div>
+        )}
+
+        {/* AI Page */}
+        {currentPage === 'ai' && (
+          <div className="flex-1 bg-slate-100 p-6 overflow-auto">
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+              <h2 className="text-xl font-bold text-slate-800 mb-4">AI Pravila</h2>
+              <p className="text-slate-600">Ovdje će biti pravila za AI generisanje rasporeda.</p>
+            </div>
+          </div>
         )}
 
         {currentPage === 'settings' && (
