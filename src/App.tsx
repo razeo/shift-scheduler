@@ -146,9 +146,14 @@ function App() {
   // Helper to get user ID
   const getUserId = () => user?.id || 'anonymous';
 
-  // Show login if not authenticated
+  // Show login if not authenticated - all hooks called before this point
   if (!user) {
-    return <Login />;
+    return (
+      <div className="flex h-screen bg-slate-100 overflow-hidden font-sans">
+        <Toaster position="top-right" />
+        <Login />
+      </div>
+    );
   }
 
   // Effects (only run when user is authenticated)
