@@ -1,4 +1,4 @@
-import { DayOfWeek, Employee, Role, Duty, Shift } from './types';
+import { DayOfWeek, Employee, Role, Duty, Shift } from './types/index';
 
 export const DAYS_ORDER = [
   DayOfWeek.MONDAY,

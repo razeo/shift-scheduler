@@ -9,17 +9,18 @@ import { Menu, Settings, Bell, Upload, Download, FileText, RotateCcw, Calendar }
 import { STORAGE_KEYS, runMigrations, getStorageItem, setStorageItem, clearAllStorage } from './utils/storage';
 import { generateEmployeeId, generateDutyId, generateShiftId, generateAssignmentId } from './utils/id';
 import { getMonday, formatDateToId, addWeeks } from './utils/date';
-import { 
-  Employee, 
-  Shift, 
-  Assignment, 
-  Duty, 
-  ChatMessage, 
-  Role, 
+import {
+  Employee,
+  Shift,
+  Assignment,
+  Duty,
+  ChatMessage,
+  Role,
   DayOfWeek,
   ScheduleState
-} from './types';
+} from './types/index';
 import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Layout/Header';
 import { ScheduleGrid } from './components/Schedule';
 import { ChatInterface } from './components/Chat';
 import { DailyReport } from './components/DailyReport';
@@ -86,12 +87,12 @@ const DEFAULT_AI_RULES = `• Svaki radnik ima max 5 smjena sedmično
 function App() {
   const { user } = useAuth();
   const { canManageUsers, canAccessSettings } = usePermissionCheck();
-  
+
   // Show login if not authenticated
   if (!user) {
     return <Login />;
   }
-  
+
   // Initialize notifications
   const {
     requestPermission,
@@ -160,19 +161,35 @@ function App() {
   }, []);
 
   const [currentPage, setCurrentPage] = useState<PageType>('schedule');
-  const [employees, setEmployees] = useState<Employee[]>(() => 
+
+  // Breadcrumbs for navigation
+  const [breadcrumbs, setBreadcrumbs] = useState<{label: string; onClick?: () => void}[]>([
+    { label: 'Raspored' }
+  ]);
+
+  // Navigate to page with breadcrumbs
+  const navigateTo = (page: PageType, label: string) => {
+    setCurrentPage(page);
+    setBreadcrumbs([
+      { label: 'Raspored', onClick: () => navigateTo('schedule', 'Raspored') },
+      { label }
+    ]);
+    setIsSidebarOpen(false);
+  };
+
+  const [employees, setEmployees] = useState<Employee[]>(() =>
     getStorageItem(STORAGE_KEYS.EMPLOYEES, INITIAL_EMPLOYEES)
   );
-  const [duties, setDuties] = useState<Duty[]>(() => 
+  const [duties, setDuties] = useState<Duty[]>(() =>
     getStorageItem(STORAGE_KEYS.DUTIES, INITIAL_DUTIES)
   );
-  const [shifts, setShifts] = useState<Shift[]>(() => 
+  const [shifts, setShifts] = useState<Shift[]>(() =>
     getStorageItem(STORAGE_KEYS.SHIFTS, INITIAL_SHIFTS)
   );
-  const [assignments, setAssignments] = useState<Assignment[]>(() => 
+  const [assignments, setAssignments] = useState<Assignment[]>(() =>
     getStorageItem(STORAGE_KEYS.ASSIGNMENTS, [])
   );
-  const [aiRules, setAiRules] = useState<string>(() => 
+  const [aiRules, setAiRules] = useState<string>(() =>
     getStorageItem(STORAGE_KEYS.AI_RULES, DEFAULT_AI_RULES)
   );
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -183,7 +200,7 @@ function App() {
   const [aiError, setAiError] = useState<string | null>(null);
 
   const currentWeekId = useMemo(() => formatDateToId(currentWeekStart), [currentWeekStart]);
-  const weekAssignments = useMemo(() => 
+  const weekAssignments = useMemo(() =>
     assignments.filter(a => a.weekId === currentWeekId),
     [assignments, currentWeekId]
   );
@@ -194,7 +211,7 @@ function App() {
     setStorageItem(STORAGE_KEYS.EMPLOYEES, updated);
     toast.success(`Dodat radnik: ${newEmp.name}`);
   };
-  
+
   const removeEmployee = (id: string) => {
     const employee = employees.find(e => e.id === id);
     const updated = employees.filter(e => e.id !== id);
@@ -219,7 +236,7 @@ function App() {
     setStorageItem(STORAGE_KEYS.DUTIES, updated);
     toast.success(`Dodata dužnost: ${newDuty.label}`);
   };
-  
+
   const removeDuty = (id: string) => {
     const duty = duties.find(d => d.id === id);
     const updated = duties.filter(d => d.id !== id);
@@ -234,7 +251,7 @@ function App() {
     setStorageItem(STORAGE_KEYS.SHIFTS, updated);
     toast.success(`Dodata smjena: ${newShift.label}`);
   };
-  
+
   const removeShift = (id: string) => {
     const shift = shifts.find(s => s.id === id);
     const updated = shifts.filter(s => s.id !== id);
@@ -260,35 +277,35 @@ function App() {
   };
 
   const manualAssign = (shiftId: string, employeeId: string, day: DayOfWeek) => {
-    const isDuplicate = assignments.some(a => 
-      a.shiftId === shiftId && 
-      a.employeeId === employeeId && 
+    const isDuplicate = assignments.some(a =>
+      a.shiftId === shiftId &&
+      a.employeeId === employeeId &&
       a.day === day &&
       a.weekId === currentWeekId
     );
-    
+
     if (isDuplicate) {
       return false; // Silent fail
     }
-    
-    const newAssignment: Assignment = { 
-      id: generateAssignmentId(), 
-      shiftId, 
-      employeeId, 
+
+    const newAssignment: Assignment = {
+      id: generateAssignmentId(),
+      shiftId,
+      employeeId,
       weekId: currentWeekId,
-      day 
+      day
     };
-    
+
     setAssignments(prev => {
       const updated = [...prev, newAssignment];
       setStorageItem(STORAGE_KEYS.ASSIGNMENTS, updated);
       return updated;
     });
-    
+
     return true;
   };
 
-  const navigateWeek = (direction: number) => 
+  const navigateWeek = (direction: number) =>
     setCurrentWeekStart(addWeeks(currentWeekStart, direction));
 
   const handleAiMessage = async (text: string) => {
@@ -297,11 +314,11 @@ function App() {
       return;
     }
 
-    const userMsg: ChatMessage = { 
-      id: Date.now().toString(), 
-      role: 'user', 
-      text, 
-      timestamp: Date.now() 
+    const userMsg: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      text,
+      timestamp: Date.now()
     };
     setChatMessages(prev => [...prev, userMsg]);
     setIsAiLoading(true);
@@ -350,14 +367,14 @@ function App() {
     setAssignments(updated);
     setStorageItem(STORAGE_KEYS.ASSIGNMENTS, updated);
 
-    setChatMessages(prev => prev.map(m => 
+    setChatMessages(prev => prev.map(m =>
       m.id === messageId ? { ...m, status: 'applied' as const } : m
     ));
     toast.success('Izmjene primijenjene');
   };
 
   const handleDiscardChanges = (messageId: string) => {
-    setChatMessages(prev => prev.map(m => 
+    setChatMessages(prev => prev.map(m =>
       m.id === messageId ? { ...m, status: 'discarded' as const } : m
     ));
     toast.success('Izmjene odbacene');
@@ -403,12 +420,7 @@ function App() {
       toast.success('Svi podaci su resetovani');
     }
   };
-
-  const handlePageChange = (page: string) => {
-    setCurrentPage(page as PageType);
-    setIsSidebarOpen(false);
-  };
-
+  
   return (
     <div className="flex h-screen bg-slate-100 overflow-hidden font-sans">
       <Toaster position="top-right" />
@@ -427,7 +439,7 @@ function App() {
           assignments={assignments}
           aiRules={aiRules} 
           currentPage={currentPage}
-          onPageChange={handlePageChange}
+          onPageChange={(page) => navigateTo(page as PageType, page.charAt(0).toUpperCase() + page.slice(1))}
           onAddEmployee={addEmployee} 
           onRemoveEmployee={removeEmployee} 
           onUpdateEmployee={updateEmployee}
@@ -449,51 +461,57 @@ function App() {
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        <Header
+          breadcrumbs={breadcrumbs}
+          userName={user?.name}
+          userRole={user?.role === 'admin' ? 'Administrator' : user?.role === 'manager' ? 'Menadžer' : 'Radnik'}
+        />
+        
         {currentPage === 'schedule' && (
-          <ScheduleGrid 
-            shifts={shifts} 
-            assignments={weekAssignments} 
-            employees={employees} 
-            duties={duties} 
-            currentWeekStart={currentWeekStart} 
-            onRemoveAssignment={removeAssignment} 
-            onManualAssign={manualAssign} 
-            onNavigateWeek={navigateWeek} 
+          <ScheduleGrid
+            shifts={shifts}
+            assignments={weekAssignments}
+            employees={employees}
+            duties={duties}
+            currentWeekStart={currentWeekStart}
+            onRemoveAssignment={removeAssignment}
+            onManualAssign={manualAssign}
+            onNavigateWeek={navigateWeek}
             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
             onToggleChat={() => setIsChatOpen(!isChatOpen)}
           />
         )}
 
         {currentPage === 'handover' && (
-          <ShiftHandover onClose={() => { setCurrentPage('schedule'); setIsSidebarOpen(true); }} />
+          <ShiftHandover onClose={() => navigateTo('schedule', 'Raspored')} />
         )}
 
         {currentPage === 'report' && (
-          <DailyReport onClose={() => { setCurrentPage('schedule'); setIsSidebarOpen(true); }} />
+          <DailyReport onClose={() => navigateTo('schedule', 'Raspored')} />
         )}
 
         {currentPage === 'outofstock' && (
-          <OutOfStock onClose={() => { setCurrentPage('schedule'); setIsSidebarOpen(true); }} />
+          <OutOfStock onClose={() => navigateTo('schedule', 'Raspored')} />
         )}
 
         {currentPage === 'responsibility' && (
-          <ResponsibilityPlan onClose={() => { setCurrentPage('schedule'); setIsSidebarOpen(true); }} />
+          <ResponsibilityPlan onClose={() => navigateTo('schedule', 'Raspored')} />
         )}
 
         {currentPage === 'roomservice' && (
-          <RoomService onClose={() => { setCurrentPage('schedule'); setIsSidebarOpen(true); }} />
+          <RoomService onClose={() => navigateTo('schedule', 'Raspored')} />
         )}
 
         {currentPage === 'wastelist' && (
-          <WasteList onClose={() => { setCurrentPage('schedule'); setIsSidebarOpen(true); }} />
+          <WasteList onClose={() => navigateTo('schedule', 'Raspored')} />
         )}
 
         {currentPage === 'dailymenu' && (
-          <DailyMenu onClose={() => { setCurrentPage('schedule'); setIsSidebarOpen(true); }} />
+          <DailyMenu onClose={() => navigateTo('schedule', 'Raspored')} />
         )}
 
         {currentPage === 'allergens' && (
-          <AllergenGuide onClose={() => { setCurrentPage('schedule'); setIsSidebarOpen(true); }} />
+          <AllergenGuide onClose={() => navigateTo('schedule', 'Raspored')} />
         )}
 
         {/* Employees Page */}
@@ -502,6 +520,7 @@ function App() {
             employees={employees}
             onAddEmployee={addEmployee}
             onRemoveEmployee={removeEmployee}
+            onUpdateEmployee={updateEmployee}
           />
         )}
 
@@ -562,8 +581,8 @@ function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* FCM Status */}
                   <div className={`p-4 rounded-xl border-2 ${
-                    hasPermission && isFcmReady 
-                      ? 'border-green-200 bg-green-50' 
+                    hasPermission && isFcmReady
+                      ? 'border-green-200 bg-green-50'
                       : 'border-slate-200 bg-slate-50'
                   }`}>
                     <div className="flex items-center gap-3 mb-2">
@@ -571,9 +590,9 @@ function App() {
                       <span className="font-medium text-slate-700">Push obavijesti</span>
                     </div>
                     <p className="text-sm text-slate-500">
-                      {hasPermission 
-                        ? isFcmReady 
-                          ? '✅ Aktivne' 
+                      {hasPermission
+                        ? isFcmReady
+                          ? '✅ Aktivne'
                           : '⚠️ Konfiguracija nedostaje'
                         : '❌ Onemogućeno'}
                     </p>
@@ -589,8 +608,8 @@ function App() {
 
                   {/* Telegram Status */}
                   <div className={`p-4 rounded-xl border-2 ${
-                    isTelegramReady 
-                      ? 'border-green-200 bg-green-50' 
+                    isTelegramReady
+                      ? 'border-green-200 bg-green-50'
                       : 'border-slate-200 bg-slate-50'
                   }`}>
                     <div className="flex items-center gap-3 mb-2">
@@ -600,8 +619,8 @@ function App() {
                       <span className="font-medium text-slate-700">Telegram</span>
                     </div>
                     <p className="text-sm text-slate-500">
-                      {isTelegramReady 
-                        ? '✅ Povezan' 
+                      {isTelegramReady
+                        ? '✅ Povezan'
                         : '⚠️ Konfiguracija nedostaje'}
                     </p>
                   </div>
@@ -614,17 +633,17 @@ function App() {
                 <p className="text-sm text-slate-500 font-mono">{getUserId()}</p>
                 <p className="text-xs text-slate-400 mt-2">Koristi se za registraciju obavijesti</p>
               </div>
-              
+
               {/* Import/Export Section */}
               <div className="mt-8 pt-8 border-t border-slate-200">
                 <h3 className="text-lg font-semibold text-slate-700 mb-4">💾 Podaci</h3>
-                
+
                 {/* Import */}
                 <label className="btn btn-secondary w-full flex items-center justify-center gap-2 mb-3 cursor-pointer">
                   <Upload size={18} /> Uvoz podataka
-                  <input 
-                    type="file" 
-                    accept=".json" 
+                  <input
+                    type="file"
+                    accept=".json"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
@@ -640,13 +659,13 @@ function App() {
                         };
                         reader.readAsText(file);
                       }
-                    }} 
-                    className="hidden" 
+                    }}
+                    className="hidden"
                   />
                 </label>
-                
+
                 {/* Export JSON */}
-                <button 
+                <button
                   onClick={() => {
                     const data = {
                       employees,
@@ -668,9 +687,9 @@ function App() {
                 >
                   <Download size={18} /> Izvoz JSON
                 </button>
-                
+
                 {/* Export CSV */}
-                <button 
+                <button
                   onClick={() => {
                     if (weekAssignments.length === 0) {
                       toast.error('Nema dodjela za export');
@@ -698,9 +717,9 @@ function App() {
                 >
                   <FileText size={18} /> Izvoz CSV
                 </button>
-                
+
                 {/* Reset All */}
-                <button 
+                <button
                   onClick={() => {
                     if (window.confirm('Da li ste sigurni da želite resetovati sve podatke?')) {
                       handleResetAll();
@@ -712,9 +731,9 @@ function App() {
                   <RotateCcw size={18} /> Resetuj sve
                 </button>
               </div>
-              
+
               {/* Back to Schedule */}
-              <button 
+              <button
                 onClick={() => {
                   setCurrentPage('schedule');
                   setIsSidebarOpen(true);
@@ -740,9 +759,9 @@ function App() {
             <PermissionsEditor />
           </div>
         )}
-        
+
         {!isSidebarOpen && (
-           <button 
+           <button
             className="lg:hidden absolute top-6 left-6 z-[60] p-3 bg-white text-slate-800 rounded-xl shadow-xl border border-slate-100"
             onClick={() => setIsSidebarOpen(true)}
            >
@@ -751,20 +770,20 @@ function App() {
         )}
       </div>
 
-      <div 
+      <div
         className={`fixed lg:static inset-y-0 right-0 z-50 transition-all duration-300 ease-in-out bg-white ${
-          isChatOpen 
-            ? 'translate-x-0 lg:w-96 border-l border-slate-200 shadow-xl lg:shadow-none' 
+          isChatOpen
+            ? 'translate-x-0 lg:w-96 border-l border-slate-200 shadow-xl lg:shadow-none'
             : 'translate-x-full lg:w-0 lg:overflow-hidden lg:border-none'
         }`}
       >
-        <ChatInterface 
-          messages={chatMessages} 
-          onSendMessage={handleAiMessage} 
+        <ChatInterface
+          messages={chatMessages}
+          onSendMessage={handleAiMessage}
           onCancelAi={() => setIsAiLoading(false)}
-          onApplyChanges={handleApplyChanges} 
-          onDiscardChanges={handleDiscardChanges} 
-          isLoading={isAiLoading} 
+          onApplyChanges={handleApplyChanges}
+          onDiscardChanges={handleDiscardChanges}
+          isLoading={isAiLoading}
           onClose={() => setIsChatOpen(false)}
           error={aiError}
           onClearError={() => setAiError(null)}
@@ -772,7 +791,7 @@ function App() {
       </div>
 
       {(isSidebarOpen || isChatOpen) && (
-        <div 
+        <div
           className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => { setIsSidebarOpen(false); setIsChatOpen(false); }}
         />
