@@ -188,7 +188,7 @@ IZLAZ (SAMO JSON, bez markdown):
 export const isAiConfigured = (): boolean => {
   const provider = getApiProvider();
   if (provider === 'minimax') {
-    return !!getMinimaxApiKey() && !!getMinimaxGroupId();
+    return !!getMinimaxApiKey();
   }
   return !!getGroqApiKey();
 };
