@@ -1,14 +1,33 @@
 // ===========================================
 // AI Service for RestoHub
-// Handles communication with Groq API (free, fast)
+// Supports Groq (free, fast) and Minimax
 // ===========================================
 
 import { ScheduleState, AIResponse, ALL_DAYS } from '../types/index';
 
-const API_BASE = 'https://api.groq.com/openai/v1/chat/completions';
+// API Configuration
+const GROQ_API_BASE = 'https://api.groq.com/openai/v1/chat/completions';
+const MINIMAX_API_BASE = 'https://api.minimax.chat/v1/text/chatcompletion_v2';
 
-const getApiKey = (): string => {
-  return import.meta.env.VITE_GROQ_API_KEY || '';
+// Get API keys from environment
+const getGroqApiKey = (): string => import.meta.env.VITE_GROQ_API_KEY || '';
+const getMinimaxApiKey = (): string => import.meta.env.VITE_MINIMAX_API_KEY || '';
+const getMinimaxGroupId = (): string => import.meta.env.VITE_MINIMAX_GROUP_ID || '';
+
+// Detect which API to use
+type ApiProvider = 'groq' | 'minimax';
+
+const getApiProvider = (): ApiProvider => {
+  const groqKey = getGroqApiKey();
+  const minimaxKey = getMinimaxApiKey();
+  
+  if (minimaxKey && minimaxKey.length > 0) {
+    return 'minimax';
+  }
+  if (groqKey && groqKey.length > 0) {
+    return 'groq';
+  }
+  return 'groq';
 };
 
 const cleanJsonOutput = (text: string): string => {
@@ -26,10 +45,13 @@ export const processScheduleRequest = async (
   currentState: ScheduleState,
   signal?: AbortSignal
 ): Promise<AIResponse> => {
-  const apiKey = getApiKey();
-
-  if (!apiKey) {
-    throw new Error('API ključ nije pronađen. Dodaj VITE_GROQ_API_KEY u .env.local fajl.');
+  const provider = getApiProvider();
+  
+  if (provider === 'minimax' && !getMinimaxApiKey()) {
+    throw new Error('Minimax API ključ nije pronađen. Dodaj VITE_MINIMAX_API_KEY u .env.local.');
+  }
+  if (provider === 'groq' && !getGroqApiKey()) {
+    throw new Error('Groq API ključ nije pronađen. Dodaj VITE_GROQ_API_KEY u .env.local.');
   }
 
   const allowedDuties = currentState.duties.map(d => d.label).join(', ');
@@ -67,79 +89,135 @@ IZLAZ (SAMO JSON, bez markdown):
 }`;
 
   try {
-    const response = await fetch(API_BASE, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'llama3-8b-8192', // Fast, free tier available
-        messages: [
-          { role: 'system', content: systemMessage },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.1,
-        max_tokens: 4096,
-      }),
-      signal,
-    });
+    let response: Response;
+    let responseData: Record<string, unknown>;
+
+    if (provider === 'minimax') {
+      // Minimax API call
+      response = await fetch(MINIMAX_API_BASE, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getMinimaxApiKey()}`,
+        },
+        body: JSON.stringify({
+          model: 'abab6.5s-chat',
+          messages: [
+            { role: 'system', content: systemMessage },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.1,
+          max_output_tokens: 4096,
+        }),
+        signal,
+      });
+    } else {
+      // Groq API call
+      response = await fetch(GROQ_API_BASE, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getGroqApiKey()}`,
+        },
+        body: JSON.stringify({
+          model: 'llama3-8b-8192',
+          messages: [
+            { role: 'system', content: systemMessage },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.1,
+          max_tokens: 4096,
+        }),
+        signal,
+      });
+    }
 
     if (signal?.aborted) {
       throw new Error('AbortError');
     }
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Groq API Error:', response.status, errorData);
-      throw new Error(`API greška (${response.status}): ${errorData.error?.message || 'Nepoznata greška'}`);
+    if (response.ok) {
+      responseData = await response.json();
+      
+      let content = '';
+      if (provider === 'minimax') {
+        const minimaxData = responseData as Record<string, unknown>;
+        const choices = minimaxData.choices as Array<{ message?: { content?: string } }> | undefined;
+        content = choices?.[0]?.message?.content || '';
+      } else {
+        const groqData = responseData as { choices?: Array<{ message?: { content?: string } }> };
+        content = groqData.choices?.[0]?.message?.content || '';
+      }
+      
+      const cleanedText = cleanJsonOutput(content);
+      
+      try {
+        const parsed = JSON.parse(cleanedText);
+        return {
+          message: parsed.message || 'Raspored je generisan.',
+          assignments: parsed.newAssignments || [],
+          newEmployees: parsed.employeesToAdd || [],
+        };
+      } catch {
+        throw new Error('Format odgovora nije ispravan.');
+      }
     }
 
-    const data = await response.json();
-
+    // Error handling
     if (signal?.aborted) {
       throw new Error('AbortError');
     }
 
-    const content = data.choices?.[0]?.message?.content || '';
-    const cleanedText = cleanJsonOutput(content);
+    const errorData = await response.json().catch(() => ({}));
+    const errorObj = errorData as Record<string, { msg?: string; message?: string }>;
+    const providerName = provider === 'minimax' ? 'Minimax' : 'Groq';
+    console.error(`${providerName} API Error:`, response.status, errorData);
+    throw new Error(`API greška (${response.status}): ${errorObj.base_resp?.msg || errorObj.error?.message || 'Nepoznata greška'}`);
 
-    try {
-      const parsed = JSON.parse(cleanedText);
-      return {
-        message: parsed.message || 'Raspored je generisan.',
-        assignments: parsed.newAssignments || [],
-        newEmployees: parsed.employeesToAdd || [],
-      };
-    } catch {
-      console.error('JSON Parse Error. Raw:', content);
-      throw new Error('Format odgovora nije ispravan. Pokušajte ponovo.');
-    }
   } catch (error) {
     if (error instanceof Error && (error.name === 'AbortError' || error.message === 'AbortError')) {
       throw error;
     }
     console.error('AI Service Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Došlo je do greške';
-    throw new Error(errorMessage || 'Došlo je do greške u komunikaciji sa AI servisom.');
+    const errMsg = error instanceof Error ? error.message : 'Došlo je do greške';
+    throw new Error(errMsg);
   }
 };
 
 // Helper to check if API is configured
 export const isAiConfigured = (): boolean => {
-  return !!getApiKey();
+  const provider = getApiProvider();
+  if (provider === 'minimax') {
+    return !!getMinimaxApiKey() && !!getMinimaxGroupId();
+  }
+  return !!getGroqApiKey();
 };
 
 // Helper to get API status
-export const getAiStatus = (): { configured: boolean; message: string } => {
-  const key = getApiKey();
-  if (!key) {
-    return { 
-      configured: false, 
-      message: 'API ključ nije podešen. Dodajte VITE_GROQ_API_KEY u .env.local' 
-    };
+export const getAiStatus = (): { configured: boolean; message: string; provider: string } => {
+  const provider = getApiProvider();
+  
+  if (provider === 'minimax') {
+    const key = getMinimaxApiKey();
+    if (!key) {
+      return { 
+        configured: false, 
+        message: 'Minimax API ključ nije podešen. Dodajte VITE_MINIMAX_API_KEY u .env.local',
+        provider: 'minimax'
+      };
+    }
+    return { configured: true, message: 'Minimax AI je spreman.', provider: 'minimax' };
+  } else {
+    const key = getGroqApiKey();
+    if (!key) {
+      return { 
+        configured: false, 
+        message: 'Groq API ključ nije podešen. Dodajte VITE_GROQ_API_KEY u .env.local',
+        provider: 'groq'
+      };
+    }
+    return { configured: true, message: 'Groq AI je spreman.', provider: 'groq' };
   }
-  return { configured: true, message: 'AI je spreman za korištenje.' };
 };
 
 // Export ALL_DAYS for use in prompts
