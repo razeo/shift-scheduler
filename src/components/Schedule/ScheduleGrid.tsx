@@ -131,7 +131,6 @@ export function ScheduleGrid({
     
     // Show success message
     if (alreadyAddedInThisBatch.length > 0) {
-      console.log(`Dodijeljeno ${alreadyAddedInThisBatch.length} radnika`);
     }
   };
 
@@ -175,7 +174,6 @@ export function ScheduleGrid({
         }
       }
     } catch (err) {
-      console.error('Invalid drop data:', err);
     }
   };
 

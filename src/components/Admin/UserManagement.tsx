@@ -88,7 +88,7 @@ export function UserManagement() {
       resetForm();
     } catch (error) {
       toast.error('Došlo je do greške');
-      console.error(error);
+      
     } finally {
       setIsSubmitting(false);
     }
