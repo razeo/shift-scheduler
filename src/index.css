@@ -32,3 +32,40 @@ body {
     display: none !important;
   }
 }
+
+/* Schedule Grid - FIXED LAYOUT */
+.schedule-grid {
+  display: grid !important;
+  grid-template-columns: 140px repeat(7, 1fr) !important;
+  min-width: 800px;
+}
+
+.schedule-cell-header {
+  padding: 12px 8px !important;
+  text-align: center !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+}
+
+.schedule-cell-header:first-child {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+  z-index: 11 !important;
+}
+
+.schedule-cell {
+  min-height: 100px !important;
+  padding: 8px !important;
+  border-right: 1px solid #e2e8f0 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  vertical-align: top !important;
+}
+
+.schedule-cell:last-child {
+  border-right: none !important;
+}
