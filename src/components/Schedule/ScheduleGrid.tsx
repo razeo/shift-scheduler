@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Bot, Calendar, Users, Plus, Check, Printer } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bot, Calendar, Users, Plus, Check, Printer, X } from 'lucide-react';
 import { Employee, Shift, Assignment, Duty, DayOfWeek, Role } from '../../types';
 import { formatDateToId, getDayName, dayOfWeekToDate } from '../../utils/date';
 
@@ -548,15 +548,5 @@ export function ScheduleGrid({
         </div>
       )}
     </div>
-  );
-}
-
-// Helper X component for the remove button
-function X({ size }: { size: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
   );
 }
