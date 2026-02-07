@@ -1,470 +1,262 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* RestoHub - 30% Size Reduction Global Styles */
 
-/* ===========================================
-   Base Styles
-   =================================== */
-
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: light dark;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Base font size reduction */
+html {
+  font-size: 14px !important;
 }
 
+/* Reduced padding in common components */
 body {
-  margin: 0;
-  min-height: 100vh;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
-/* ===========================================
-   Utility Classes
-   =================================== */
-
-@layer utilities {
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
-    border-radius: 3px;
-  }
-  
-  .glass {
-    @apply bg-white/80 backdrop-blur-lg;
-  }
-  
-  .glass-dark {
-    @apply bg-slate-900/80 backdrop-blur-lg;
-  }
+/* Login form */
+.login-container,
+.max-w-md {
+  max-width: 380px !important;
+  padding: 1.25rem !important;
 }
 
-/* ===========================================
-   Animation Classes
-   =================================== */
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.login-container input,
+.max-w-md input {
+  padding: 0.6rem 0.85rem !important;
+  font-size: 0.85rem !important;
 }
 
-@keyframes slideIn {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
+.login-container button,
+.max-w-md button {
+  padding: 0.6rem 1rem !important;
+  font-size: 0.85rem !important;
 }
 
-@keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+/* Sidebar reduction */
+.sidebar,
+[data-testid="sidebar"],
+.w-72,
+.w-80 {
+  width: 200px !important;
+  min-width: 200px !important;
+  padding: 0.75rem !important;
 }
 
-@keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+.sidebar .text-lg,
+.w-80 .text-lg {
+  font-size: 1.1rem !important;
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.2s ease-out;
+.sidebar .text-sm,
+.w-80 .text-sm {
+  font-size: 0.75rem !important;
 }
 
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out;
+.sidebar .p-2,
+.w-80 .p-2 {
+  padding: 0.4rem !important;
 }
 
-.animate-slide-in-right {
-  animation: slideInRight 0.3s ease-out;
+.sidebar .p-3,
+.w-80 .p-3 {
+  padding: 0.5rem !important;
 }
 
-.animate-scale-in {
-  animation: scaleIn 0.2s ease-out;
+.sidebar .p-4,
+.w-80 .p-4 {
+  padding: 0.65rem !important;
 }
 
-/* ===========================================
-   Component Styles
-   =================================== */
-
-.btn {
-  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
-  @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+/* Header reduction */
+header,
+.header {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.85rem !important;
 }
 
-.btn-primary {
-  @apply bg-primary-600 text-white;
-  @apply hover:bg-primary-700 focus:ring-primary-500;
-  @apply active:bg-primary-800;
+header h1,
+.header h1 {
+  font-size: 1.1rem !important;
 }
 
-.btn-secondary {
-  @apply bg-slate-100 text-slate-700;
-  @apply hover:bg-slate-200 focus:ring-slate-500;
-  @apply active:bg-slate-300;
+header .text-xl,
+.header .text-xl {
+  font-size: 1rem !important;
 }
 
-.btn-danger {
-  @apply bg-red-600 text-white;
-  @apply hover:bg-red-700 focus:ring-red-500;
-  @apply active:bg-red-800;
-}
-
-.btn-ghost {
-  @apply bg-transparent text-slate-600;
-  @apply hover:bg-slate-100 focus:ring-slate-500;
-  @apply active:bg-slate-200;
-}
-
-.input {
-  @apply w-full px-4 py-2 rounded-lg border border-slate-300;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
-  @apply placeholder:text-slate-400;
-}
-
-.card {
-  @apply bg-white rounded-xl shadow-sm border border-slate-200;
-  @apply p-4 md:p-6;
-}
-
-.card-hover {
-  @apply card transition-all duration-200;
-  @apply hover:shadow-md hover:border-slate-300;
-}
-
-/* ===========================================
-   Schedule Grid Styles
-   =================================== */
-
-.schedule-grid {
-  @apply grid grid-cols-8 gap-px bg-slate-200 rounded-lg overflow-hidden;
-}
-
+/* Schedule grid reduction */
+.schedule-grid,
 .schedule-cell {
-  @apply bg-white p-2 min-h-[80px] transition-colors;
-  @apply hover:bg-slate-50;
+  font-size: 0.75rem !important;
 }
 
-.schedule-cell-header {
-  @apply bg-slate-50 p-2 text-center font-medium text-sm text-slate-600;
-  @apply sticky top-0 z-10;
+.schedule-grid .p-3,
+.schedule-cell .p-3 {
+  padding: 0.5rem !important;
 }
 
-.assignment-chip {
-  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
-  @apply bg-primary-100 text-primary-700;
-  @apply cursor-pointer hover:bg-primary-200;
-  @apply transition-colors;
+.schedule-grid .p-4,
+.schedule-cell .p-4 {
+  padding: 0.6rem !important;
 }
 
-.assignment-chip-removable {
-  @apply assignment-chip pr-1;
+.schedule-grid .text-sm,
+.schedule-cell .text-sm {
+  font-size: 0.7rem !important;
 }
 
-.assignment-chip-remove {
-  @apply ml-1 p-0.5 rounded-full;
-  @apply hover:bg-primary-300;
+.schedule-grid .text-xs,
+.schedule-cell .text-xs {
+  font-size: 0.65rem !important;
 }
 
-/* ===========================================
-   Sidebar Styles
-   =================================== */
-
-.sidebar {
-  @apply flex flex-col h-full bg-white border-r border-slate-200;
+/* Button reduction */
+.btn,
+button {
+  padding: 0.5rem 0.85rem !important;
+  font-size: 0.8rem !important;
+  border-radius: 0.4rem !important;
 }
 
-.sidebar-header {
-  @apply flex items-center justify-between p-4 border-b border-slate-200;
+.btn-sm {
+  padding: 0.35rem 0.65rem !important;
+  font-size: 0.75rem !important;
 }
 
-.sidebar-section {
-  @apply p-4 border-b border-slate-100;
+.btn-lg {
+  padding: 0.6rem 1.1rem !important;
+  font-size: 0.85rem !important;
 }
 
-.sidebar-item {
-  @apply flex items-center gap-3 p-3 rounded-lg;
-  @apply text-slate-600 hover:bg-slate-50;
-  @apply cursor-pointer transition-colors;
+/* Card/Menu reduction */
+.card,
+.bg-white.rounded-2xl,
+.bg-white.rounded-xl {
+  border-radius: 0.5rem !important;
+  padding: 1rem !important;
 }
 
-.sidebar-item-active {
-  @apply sidebar-item bg-primary-50 text-primary-700;
-  @apply hover:bg-primary-100;
+.bg-white.rounded-2xl {
+  padding: 1.25rem !important;
 }
 
-/* ===========================================
-   Modal Styles
-   =================================== */
-
-.modal-overlay {
-  @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50;
-  @apply flex items-center justify-center p-4;
+/* Table reduction */
+table {
+  font-size: 0.8rem !important;
 }
 
-.modal-content {
-  @apply bg-white rounded-xl shadow-xl max-w-md w-full;
-  @apply max-h-[90vh] overflow-y-auto;
-  @apply animate-scale-in;
+table th,
+table td {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.75rem !important;
 }
 
-.modal-header {
-  @apply flex items-center justify-between p-4 border-b border-slate-200;
+/* Modal reduction */
+.modal,
+.fixed.inset-0.bg-black\/50 + div {
+  padding: 1rem !important;
 }
 
-.modal-body {
-  @apply p-4;
+.modal-content,
+.fixed.inset-0.bg-black\/50 + div > div {
+  max-width: 400px !important;
+  padding: 1.25rem !important;
 }
 
-.modal-footer {
-  @apply flex items-center justify-end gap-3 p-4 border-t border-slate-200;
+/* Chat interface reduction */
+.chat-interface,
+[data-testid="chat"] {
+  font-size: 0.85rem !important;
 }
 
-/* ===========================================
-   Chat Interface Styles
-   =================================== */
-
-.chat-container {
-  @apply flex flex-col h-full bg-slate-50;
+.chat-interface .p-4,
+[data-testid="chat"] .p-4 {
+  padding: 0.6rem !important;
 }
 
-.chat-messages {
-  @apply flex-1 overflow-y-auto p-4 space-y-4;
-  @apply scrollbar-thin;
+.chat-interface .text-sm,
+[data-testid="chat"] .text-sm {
+  font-size: 0.75rem !important;
 }
 
-.chat-message {
-  @apply max-w-[85%] rounded-2xl p-3;
+/* Icon size reduction */
+.icon-sm,
+.icon-sm svg {
+  width: 14px !important;
+  height: 14px !important;
 }
 
-.chat-message-user {
-  @apply chat-message bg-primary-600 text-white ml-auto;
-  @apply rounded-br-md;
+.icon-md,
+.icon-md svg {
+  width: 18px !important;
+  height: 18px !important;
 }
 
-.chat-message-model {
-  @apply chat-message bg-white border border-slate-200 text-slate-800;
-  @apply rounded-bl-md;
+.icon-lg,
+.icon-lg svg {
+  width: 22px !important;
+  height: 22px !important;
 }
 
-.chat-input-container {
-  @apply p-4 border-t border-slate-200 bg-white;
+/* Badge/Tag reduction */
+.badge,
+.px-2\.py-0\.5,
+.px-3.py-1 {
+  padding: 0.2rem 0.5rem !important;
+  font-size: 0.65rem !important;
 }
 
-.chat-input-wrapper {
-  @apply flex items-end gap-2;
+/* Gap reduction */
+.gap-2 {
+  gap: 0.4rem !important;
 }
 
-.chat-input {
-  @apply input resize-none min-h-[44px] max-h-32;
+.gap-3 {
+  gap: 0.5rem !important;
 }
 
-.chat-send-btn {
-  @apply btn btn-primary p-2;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+.gap-4 {
+  gap: 0.75rem !important;
 }
 
-/* ===========================================
-   Toast Styles
-   =================================== */
-
-.toast-success {
-  @apply bg-green-50 border border-green-200 text-green-800;
+.gap-6 {
+  gap: 1rem !important;
 }
 
-.toast-error {
-  @apply bg-red-50 border border-red-200 text-red-800;
+/* Form input reduction */
+input,
+select,
+textarea {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.85rem !important;
+  border-radius: 0.35rem !important;
 }
 
-.toast-warning {
-  @apply bg-yellow-50 border border-yellow-200 text-yellow-800;
+/* Select dropdown reduction */
+select {
+  padding: 0.45rem 0.65rem !important;
+  font-size: 0.8rem !important;
 }
 
-.toast-info {
-  @apply bg-blue-50 border border-blue-200 text-blue-800;
-}
-
-/* ===========================================
-   Print Styles for Schedule
-   =================================== */
-
+/* Print styles - also reduced */
 @media print {
-  /* Hide everything by default */
-  body,
-  body * {
-    visibility: hidden !important;
+  .print\:p-4 {
+    padding: 0.75rem !important;
   }
   
-  /* Show only the schedule container */
-  #schedule-container,
-  #schedule-container * {
-    visibility: visible !important;
-  }
-  
-  #schedule-container {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: auto !important;
-    overflow: visible !important;
-    background: white !important;
-    padding: 15px !important;
-  }
-  
-  /* Hide all buttons */
-  button {
-    display: none !important;
-  }
-  
-  /* Hide navigation arrows in header */
-  .flex.items-center.gap-2 button {
-    display: none !important;
-  }
-  
-  /* Week date range below title */
-  .week-date-range {
-    display: block !important;
-    text-align: center !important;
-    font-size: 16px !important;
-    color: #333 !important;
-    margin-bottom: 15px !important;
-  }
-  
-  /* Show header title */
-  #schedule-container h1 {
-    display: block !important;
-    font-size: 28px !important;
-    margin-bottom: 5px !important;
-    text-align: center !important;
-  }
-  
-  /* Schedule grid */
-  .schedule-grid {
-    border: 2px solid #333 !important;
-    page-break-inside: avoid;
-    font-size: 12px;
-  }
-  
-  .schedule-grid > div {
-    border-color: #333 !important;
-  }
-  
-  .schedule-cell {
-    min-height: 50px !important;
-    padding: 3px !important;
-    border-color: #999 !important;
-  }
-  
-  .schedule-cell-header {
-    background: #f0f0f0 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    padding: 8px 4px !important;
-  }
-  
-  .schedule-cell-header div:first-child {
-    font-size: 13px;
-    font-weight: 600;
-  }
-  
-  .schedule-cell-header div:last-child {
-    font-size: 10px;
-  }
-  
-  /* Shift labels */
-  .p-3.bg-slate-50 {
-    background: #f8fafc !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    padding: 8px 6px !important;
-  }
-  
-  .p-3.bg-slate-50 .font-medium {
-    font-size: 12px;
-    font-weight: 600;
-  }
-  
-  .p-3.bg-slate-50 .text-xs {
-    font-size: 10px;
-  }
-  
-  /* Remove hover effects */
-  .schedule-cell:hover,
-  .schedule-cell:active {
-    background: white !important;
-  }
-  
-  /* Employee badges - COLORED BORDER ONLY for print */
-  .bg-orange-100,
-  .bg-purple-100,
-  .bg-emerald-100,
-  .bg-pink-100,
-  .bg-amber-100,
-  .bg-indigo-100,
-  .bg-blue-100 {
-    background: white !important;
-    border: 2px solid !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  
-  .bg-orange-100 { border-color: #f97316 !important; color: #c2410c !important; }
-  .bg-purple-100 { border-color: #a855f7 !important; color: #7e22ce !important; }
-  .bg-emerald-100 { border-color: #10b981 !important; color: #047857 !important; }
-  .bg-pink-100 { border-color: #ec4899 !important; color: #be185d !important; }
-  .bg-amber-100 { border-color: #f59e0b !important; color: #b45309 !important; }
-  .bg-indigo-100 { border-color: #6366f1 !important; color: #4338ca !important; }
-  .bg-blue-100 { border-color: #3b82f6 !important; color: #1d4ed8 !important; }
-  
-  /* Duty badges */
-  .bg-white\/50 {
-    background: #f1f5f9 !important;
-    border: 1px solid #cbd5e1 !important;
-  }
-  
-  /* Remove buttons from print */
-  .absolute,
-  .group-hover\:opacity-100,
-  .w-full.mt-1,
-  .w-full.h-full.flex,
-  .pointer-events-none,
-  .hidden {
-    display: none !important;
-  }
-  
-  /* Hide legend, stats, drag hints - everything below grid */
-  .mt-4,
-  .mt-6 {
-    display: none !important;
-  }
-  
-  /* Page setup */
-  @page {
-    margin: 1cm;
-    size: landscape;
+  .print\:text-lg {
+    font-size: 1rem !important;
   }
 }
 
-/* Show week date range (hidden by default) */
-.week-date-range {
-  display: none;
+/* Scrollbar reduction */
+::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
 }
 
-@media print {
-  .week-date-range {
-    display: block !important;
-  }
+::-webkit-scrollbar-thumb {
+  border-radius: 3px !important;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 3px !important;
 }
